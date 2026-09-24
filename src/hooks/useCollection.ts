@@ -2,15 +2,18 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   getAllPanels,
   getAllSpotOverrides,
+  getAllSpotPhotos,
   getAllStatueNames,
   getAllStatuePhotos,
   type Panel,
   type SpotOverride,
+  type SpotPhoto,
   type StatuePhoto,
 } from '../lib/db';
 
 export type Collection = {
   statuePhotos: Map<string, StatuePhoto>;
+  spotPhotos: Map<string, SpotPhoto>;
   panels: Panel[];
   statueNames: Map<string, string>;
   spotOverrides: Map<string, SpotOverride>;
@@ -23,6 +26,7 @@ type Data = Omit<Collection, 'reload'>;
 export function useCollection(): Collection {
   const [data, setData] = useState<Data>({
     statuePhotos: new Map(),
+    spotPhotos: new Map(),
     panels: [],
     statueNames: new Map(),
     spotOverrides: new Map(),
@@ -30,14 +34,16 @@ export function useCollection(): Collection {
   });
 
   const reload = useCallback(async () => {
-    const [photos, panels, names, overrides] = await Promise.all([
+    const [photos, spotShots, panels, names, overrides] = await Promise.all([
       getAllStatuePhotos(),
+      getAllSpotPhotos(),
       getAllPanels(),
       getAllStatueNames(),
       getAllSpotOverrides(),
     ]);
     setData({
       statuePhotos: new Map(photos.map((p) => [p.statueId, p])),
+      spotPhotos: new Map(spotShots.map((p) => [p.spotId, p])),
       panels,
       statueNames: new Map(names.map((n) => [n.statueId, n.name])),
       spotOverrides: new Map(overrides.map((o) => [o.spotId, o])),

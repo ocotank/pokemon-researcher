@@ -1,12 +1,22 @@
 import { strToU8, zipSync } from 'fflate';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { backupFileName, buildBackupZip, exportBackup, importBackup, parseBackupZip, type BackupData } from './backup';
-import { getAllPanels, getAllStatueNames, getAllStatuePhotos, putPanel, putStatuePhoto, resetDatabase } from './db';
+import {
+  getAllPanels,
+  getAllSpotPhotos,
+  getAllStatueNames,
+  getAllStatuePhotos,
+  putPanel,
+  putSpotPhoto,
+  putStatuePhoto,
+  resetDatabase,
+} from './db';
 
 const jpeg = (text: string) => new Blob([text], { type: 'image/jpeg' });
 
 const sample = (): BackupData => ({
   statuePhotos: [{ statueId: 's1', blob: jpeg('statue'), thumb: jpeg('statue-thumb'), takenAt: 10 }],
+  spotPhotos: [{ spotId: 'spot1', blob: jpeg('spot'), thumb: jpeg('spot-thumb'), takenAt: 15 }],
   panels: [
     {
       id: 'p1',
@@ -38,6 +48,9 @@ describe('buildBackupZip / parseBackupZip', () => {
     expect(await out.statuePhotos[0].blob.text()).toBe('statue');
     expect(await out.statuePhotos[0].thumb?.text()).toBe('statue-thumb');
     expect(out.statuePhotos[0].blob.type).toBe('image/jpeg');
+    expect(out.spotPhotos[0].spotId).toBe('spot1');
+    expect(await out.spotPhotos[0].blob.text()).toBe('spot');
+    expect(await out.spotPhotos[0].thumb?.text()).toBe('spot-thumb');
     const { blob, thumb, ...p1 } = out.panels[0];
     expect(p1).toEqual({ id: 'p1', name: 'ピカチュウ', memo: 'メモ', lat: 35.68, lng: 139.77, accuracy: 15, takenAt: 20 });
     expect(await blob.text()).toBe('panel');
@@ -64,6 +77,7 @@ describe('buildBackupZip / parseBackupZip', () => {
     const out = parseBackupZip(zip);
     expect(out.statuePhotos[0].thumb).toBeUndefined();
     expect(out.panels[0].thumb).toBeUndefined();
+    expect(out.spotPhotos).toEqual([]);
   });
 
   it('data.json が無ければエラー', () => {
@@ -79,6 +93,7 @@ describe('buildBackupZip / parseBackupZip', () => {
 describe('exportBackup / importBackup', () => {
   it('書き出したものを空の DB に読み込むと元に戻る', async () => {
     await putStatuePhoto({ statueId: 's1', blob: jpeg('statue'), takenAt: 10 });
+    await putSpotPhoto({ spotId: 'spot1', blob: jpeg('spot'), takenAt: 15 });
     await putPanel({ id: 'p1', blob: jpeg('panel'), name: 'a', memo: '', takenAt: 20 });
     const zip = new Uint8Array(await (await exportBackup()).arrayBuffer());
 
@@ -87,6 +102,7 @@ describe('exportBackup / importBackup', () => {
 
     expect(counts).toEqual({ statuePhotos: 1, panels: 1 });
     expect((await getAllStatuePhotos())[0].statueId).toBe('s1');
+    expect(await (await getAllSpotPhotos())[0].blob.text()).toBe('spot');
     expect(await (await getAllPanels())[0].blob.text()).toBe('panel');
   });
 

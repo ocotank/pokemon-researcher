@@ -1,4 +1,4 @@
-import { deleteDB, openDB, type DBSchema, type IDBPDatabase } from 'idb';
+import { deleteDB, openDB, type DBSchema, type IDBPDatabase, type StoreNames } from 'idb';
 
 export type StatuePhoto = { statueId: string; blob: Blob; thumb?: Blob; takenAt: number };
 export type Panel = {
@@ -12,11 +12,13 @@ export type Panel = {
   accuracy?: number;
   takenAt: number;
 };
+export type SpotPhoto = { spotId: string; blob: Blob; thumb?: Blob; takenAt: number };
 export type StatueName = { statueId: string; name: string };
 export type SpotOverride = { spotId: string; lat: number; lng: number };
 
 interface Schema extends DBSchema {
   statuePhotos: { key: string; value: StatuePhoto };
+  spotPhotos: { key: string; value: SpotPhoto };
   panels: { key: string; value: Panel };
   statueNames: { key: string; value: StatueName };
   spotOverrides: { key: string; value: SpotOverride };
@@ -26,12 +28,16 @@ const DB_NAME = 'legend-research';
 let dbPromise: Promise<IDBPDatabase<Schema>> | null = null;
 
 function db(): Promise<IDBPDatabase<Schema>> {
-  dbPromise ??= openDB<Schema>(DB_NAME, 1, {
+  dbPromise ??= openDB<Schema>(DB_NAME, 2, {
     upgrade(d) {
-      d.createObjectStore('statuePhotos', { keyPath: 'statueId' });
-      d.createObjectStore('panels', { keyPath: 'id' });
-      d.createObjectStore('statueNames', { keyPath: 'statueId' });
-      d.createObjectStore('spotOverrides', { keyPath: 'spotId' });
+      const create = (name: StoreNames<Schema>, keyPath: string) => {
+        if (!d.objectStoreNames.contains(name)) d.createObjectStore(name, { keyPath });
+      };
+      create('statuePhotos', 'statueId');
+      create('panels', 'id');
+      create('statueNames', 'statueId');
+      create('spotOverrides', 'spotId');
+      create('spotPhotos', 'spotId');
     },
     terminated() {
       dbPromise = null;
@@ -81,6 +87,16 @@ export async function getAllStatuePhotos(): Promise<StatuePhoto[]> {
 }
 export async function deleteStatuePhoto(statueId: string): Promise<void> {
   await withDB((d) => d.delete('statuePhotos', statueId));
+}
+
+export async function putSpotPhoto(v: SpotPhoto): Promise<void> {
+  await withDB((d) => d.put('spotPhotos', v));
+}
+export async function getAllSpotPhotos(): Promise<SpotPhoto[]> {
+  return withDB((d) => d.getAll('spotPhotos'));
+}
+export async function deleteSpotPhoto(spotId: string): Promise<void> {
+  await withDB((d) => d.delete('spotPhotos', spotId));
 }
 
 export async function putPanel(v: Panel): Promise<void> {

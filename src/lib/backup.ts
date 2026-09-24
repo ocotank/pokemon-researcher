@@ -2,20 +2,24 @@ import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 import {
   getAllPanels,
   getAllSpotOverrides,
+  getAllSpotPhotos,
   getAllStatueNames,
   getAllStatuePhotos,
   putPanel,
   putSpotOverride,
+  putSpotPhoto,
   putStatueName,
   putStatuePhoto,
   type Panel,
   type SpotOverride,
+  type SpotPhoto,
   type StatueName,
   type StatuePhoto,
 } from './db';
 
 export type BackupData = {
   statuePhotos: StatuePhoto[];
+  spotPhotos: SpotPhoto[];
   panels: Panel[];
   statueNames: StatueName[];
   spotOverrides: SpotOverride[];
@@ -25,6 +29,7 @@ type Manifest = {
   version: 1;
   exportedAt: number;
   statuePhotos: (Omit<StatuePhoto, 'blob' | 'thumb'> & { file: string; thumbFile?: string })[];
+  spotPhotos?: (Omit<SpotPhoto, 'blob' | 'thumb'> & { file: string; thumbFile?: string })[];
   panels: (Omit<Panel, 'blob' | 'thumb'> & { file: string; thumbFile?: string })[];
   statueNames: StatueName[];
   spotOverrides: SpotOverride[];
@@ -35,10 +40,12 @@ const toBlob = (u8: Uint8Array, type: string) => new Blob([u8 as Uint8Array<Arra
 
 export async function buildBackupZip(d: BackupData, now = Date.now()): Promise<Uint8Array> {
   const files: Record<string, Uint8Array> = {};
+  const spotPhotos: NonNullable<Manifest['spotPhotos']> = [];
   const manifest: Manifest = {
     version: 1,
     exportedAt: now,
     statuePhotos: [],
+    spotPhotos,
     panels: [],
     statueNames: d.statueNames,
     spotOverrides: d.spotOverrides,
@@ -49,6 +56,13 @@ export async function buildBackupZip(d: BackupData, now = Date.now()): Promise<U
     const thumbFile = thumb ? `photos/statue-${rest.statueId}-thumb.jpg` : undefined;
     if (thumb && thumbFile) files[thumbFile] = await toBytes(thumb);
     manifest.statuePhotos.push({ ...rest, file, ...(thumbFile ? { thumbFile } : {}) });
+  }
+  for (const { blob, thumb, ...rest } of d.spotPhotos) {
+    const file = `photos/spot-${rest.spotId}.jpg`;
+    files[file] = await toBytes(blob);
+    const thumbFile = thumb ? `photos/spot-${rest.spotId}-thumb.jpg` : undefined;
+    if (thumb && thumbFile) files[thumbFile] = await toBytes(thumb);
+    spotPhotos.push({ ...rest, file, ...(thumbFile ? { thumbFile } : {}) });
   }
   for (const { blob, thumb, ...rest } of d.panels) {
     const file = `photos/panel-${rest.id}.jpg`;
@@ -79,6 +93,11 @@ export function parseBackupZip(zip: Uint8Array): BackupData {
       blob: photo(file),
       ...(thumbFile ? { thumb: photo(thumbFile) } : {}),
     })),
+    spotPhotos: (m.spotPhotos ?? []).map(({ file, thumbFile, ...rest }) => ({
+      ...rest,
+      blob: photo(file),
+      ...(thumbFile ? { thumb: photo(thumbFile) } : {}),
+    })),
     panels: m.panels.map(({ file, thumbFile, ...rest }) => ({
       ...rest,
       blob: photo(file),
@@ -90,19 +109,21 @@ export function parseBackupZip(zip: Uint8Array): BackupData {
 }
 
 export async function exportBackup(): Promise<Blob> {
-  const [statuePhotos, panels, statueNames, spotOverrides] = await Promise.all([
+  const [statuePhotos, spotPhotos, panels, statueNames, spotOverrides] = await Promise.all([
     getAllStatuePhotos(),
+    getAllSpotPhotos(),
     getAllPanels(),
     getAllStatueNames(),
     getAllSpotOverrides(),
   ]);
-  const zip = await buildBackupZip({ statuePhotos, panels, statueNames, spotOverrides });
+  const zip = await buildBackupZip({ statuePhotos, spotPhotos, panels, statueNames, spotOverrides });
   return toBlob(zip, 'application/zip');
 }
 
 export async function importBackup(zip: Uint8Array): Promise<{ statuePhotos: number; panels: number }> {
   const d = parseBackupZip(zip);
   for (const v of d.statuePhotos) await putStatuePhoto(v);
+  for (const v of d.spotPhotos) await putSpotPhoto(v);
   for (const v of d.panels) await putPanel(v);
   for (const v of d.statueNames) await putStatueName(v);
   for (const v of d.spotOverrides) await putSpotOverride(v);

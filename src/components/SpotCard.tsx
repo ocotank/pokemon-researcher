@@ -1,7 +1,14 @@
 import type { Spot } from '../data/spots';
 import type { Collection } from '../hooks/useCollection';
 import type { Position } from '../hooks/useGeolocation';
-import { deleteSpotOverride, deleteStatueName, putSpotOverride, putStatueName, putStatuePhoto } from '../lib/db';
+import {
+  deleteSpotOverride,
+  deleteStatueName,
+  putSpotOverride,
+  putSpotPhoto,
+  putStatueName,
+  putStatuePhoto,
+} from '../lib/db';
 import { errorText } from '../lib/errors';
 import { formatDistance } from '../lib/geo';
 import { shareOrDownload } from '../lib/share';
@@ -13,6 +20,7 @@ type Props = { spot: Spot; distance: number | null; collection: Collection; here
 
 export function SpotCard({ spot, distance, collection, here }: Props) {
   const overridden = collection.spotOverrides.has(spot.id);
+  const spotPhoto = collection.spotPhotos.get(spot.id);
 
   async function fixLocation() {
     if (!here) {
@@ -82,6 +90,20 @@ export function SpotCard({ spot, distance, collection, here }: Props) {
     }
   }
 
+  async function saveSpotPhoto(photo: { blob: Blob; thumb: Blob }) {
+    try {
+      await putSpotPhoto({ spotId: spot.id, ...photo, takenAt: Date.now() });
+    } catch (e) {
+      alert(`保存できませんでした: ${errorText(e)}`);
+      return;
+    }
+    try {
+      await collection.reload();
+    } catch {
+      alert('表示を更新できませんでした。アプリを開き直してください');
+    }
+  }
+
   return (
     <article className="card">
       <div className="spot-head">
@@ -128,6 +150,29 @@ export function SpotCard({ spot, distance, collection, here }: Props) {
             </li>
           );
         })}
+
+        <li className={`overall ${spotPhoto ? 'done' : ''}`}>
+          {spotPhoto ? (
+            <BlobImage blob={spotPhoto.thumb ?? spotPhoto.blob} alt="全体写真" className="thumb" />
+          ) : (
+            <div className="thumb empty" aria-hidden="true">
+              ?
+            </div>
+          )}
+          <span className="name">全体写真</span>
+          <div className="row-actions">
+            <PhotoButton
+              label={spotPhoto ? '撮り直す' : '撮影する'}
+              className={spotPhoto ? '' : 'primary'}
+              onPhoto={saveSpotPhoto}
+            />
+            {spotPhoto && (
+              <button type="button" onClick={() => shareOrDownload(spotPhoto.blob, `${spot.id}-overall.jpg`)}>
+                保存
+              </button>
+            )}
+          </div>
+        </li>
       </ul>
 
       <div className="actions">
