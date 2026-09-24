@@ -13,8 +13,6 @@ export type Spot = {
   statues: Statue[];
 };
 
-const UNKNOWN = '未確認のポケモン';
-
 export const SPOTS: readonly Spot[] = [
   {
     id: 'terrace-b1f',
@@ -36,8 +34,8 @@ export const SPOTS: readonly Spot[] = [
     lat: 35.6884,
     lng: 139.7737,
     statues: [
-      { id: 'terrace-1f-1', name: UNKNOWN, tentative: true },
-      { id: 'terrace-1f-2', name: UNKNOWN, tentative: true },
+      { id: 'terrace-1f-1', name: 'グラードン', tentative: true },
+      { id: 'terrace-1f-2', name: 'カイオーガ', tentative: true },
     ],
   },
   {
@@ -73,8 +71,8 @@ export const SPOTS: readonly Spot[] = [
     lat: 35.6866,
     lng: 139.7744,
     statues: [
-      { id: 'annaisho-b1f-1', name: UNKNOWN, tentative: true },
-      { id: 'annaisho-b1f-2', name: UNKNOWN, tentative: true },
+      { id: 'annaisho-b1f-1', name: 'レシラム', tentative: true },
+      { id: 'annaisho-b1f-2', name: 'ゼクロム', tentative: true },
     ],
   },
   {
@@ -85,8 +83,8 @@ export const SPOTS: readonly Spot[] = [
     lat: 35.6793,
     lng: 139.769,
     statues: [
-      { id: 'midtown-b1f-1', name: UNKNOWN, tentative: true },
-      { id: 'midtown-b1f-2', name: UNKNOWN, tentative: true },
+      { id: 'midtown-b1f-1', name: 'ザシアン', tentative: true },
+      { id: 'midtown-b1f-2', name: 'ザマゼンタ', tentative: true },
     ],
   },
   {
@@ -109,8 +107,8 @@ export const SPOTS: readonly Spot[] = [
     lat: 35.6793,
     lng: 139.769,
     statues: [
-      { id: 'midtown-2f-1', name: UNKNOWN, tentative: true },
-      { id: 'midtown-2f-2', name: UNKNOWN, tentative: true },
+      { id: 'midtown-2f-1', name: 'ミライドン', tentative: true },
+      { id: 'midtown-2f-2', name: 'コライドン', tentative: true },
     ],
   },
   {
