@@ -1,3 +1,4 @@
+import { useInView } from '../hooks/useInView';
 import { directionsUrl, embedMapUrl } from '../lib/geo';
 import type { LatLng } from '../lib/geo';
 
@@ -5,17 +6,23 @@ type Props = { at: LatLng; label: string };
 
 // 地図はプレビュー表示のみ。クロスオリジンの iframe 内のクリックは拾えないため、
 // 透明なリンクを重ねて「地図をタップ＝道順を開く」に一本化している。
+// iframe は画面に近づいたカードだけに置き、スクロールに応じて順次読み込む。
+// スポット位置は CSS で中心にドットを重ねて示す（埋め込み地図はマーカーを描かないため）。
 export function SpotMap({ at, label }: Props) {
+  const { ref, inView } = useInView<HTMLDivElement>();
+
   return (
-    <div className="spot-map">
-      <iframe
-        src={embedMapUrl(at)}
-        title={`${label}の地図`}
-        loading="lazy"
-        referrerPolicy="no-referrer-when-downgrade"
-        tabIndex={-1}
-        aria-hidden="true"
-      />
+    <div className="spot-map" ref={ref}>
+      {inView && (
+        <iframe
+          src={embedMapUrl(at)}
+          title={`${label}の地図`}
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+          tabIndex={-1}
+          aria-hidden="true"
+        />
+      )}
       <a
         className="spot-map-link"
         href={directionsUrl(at)}
