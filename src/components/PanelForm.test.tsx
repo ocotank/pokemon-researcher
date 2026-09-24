@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Position } from '../hooks/useGeolocation';
 import { getAllPanels, resetDatabase } from '../lib/db';
@@ -22,17 +22,24 @@ describe('PanelForm', () => {
     const position = new Promise<Position | null>((resolve) => {
       resolvePosition = resolve;
     });
-    render(<PanelForm draft={createDraft(position)} onClose={vi.fn()} onSaved={vi.fn(async () => {})} />);
+    const onSaved = vi.fn(async () => {});
+    render(<PanelForm draft={createDraft(position)} onClose={vi.fn()} onSaved={onSaved} />);
 
     const saveButton = screen.getByRole('button', { name: '現在地を取得してから保存…' });
-    fireEvent.click(saveButton);
-    fireEvent.click(saveButton);
-    fireEvent.click(saveButton);
+    // fireEvent は 1 回ごとに再描画してボタンが disabled になるため、
+    // 再描画前に連続タップが届く実機の状況を 1 つの act 内のクリックで再現する
+    await act(async () => {
+      saveButton.click();
+      saveButton.click();
+      saveButton.click();
+    });
     resolvePosition(null);
 
     await waitFor(async () => {
       expect(await getAllPanels()).toHaveLength(1);
     });
+    await Promise.resolve();
+    expect(onSaved).toHaveBeenCalledTimes(1);
   });
 
   it('位置取得後に緯度経度付きで保存し、取得中は案内を表示する', async () => {
