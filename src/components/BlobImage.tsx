@@ -1,0 +1,14 @@
+import { useEffect, useState } from 'react';
+
+type Props = { blob: Blob; alt: string; className?: string; onClick?: () => void };
+
+export function BlobImage({ blob, alt, className, onClick }: Props) {
+  const [url, setUrl] = useState<string>();
+  useEffect(() => {
+    const u = URL.createObjectURL(blob);
+    setUrl(u);
+    return () => URL.revokeObjectURL(u);
+  }, [blob]);
+  if (!url) return null;
+  return <img src={url} alt={alt} className={className} onClick={onClick} />;
+}
