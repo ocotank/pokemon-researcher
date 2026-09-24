@@ -139,7 +139,7 @@ export function SpotCard({ spot, distance, collection, here }: Props) {
                 <PhotoButton
                   label={photo ? '撮り直す' : '撮影する'}
                   className={photo ? '' : 'primary'}
-                  onPhoto={(b) => savePhoto(s.id, b)}
+                  onPhotos={([photo]) => savePhoto(s.id, photo)}
                 />
                 {photo && (
                   <button type="button" onClick={() => shareOrDownload(photo.blob, `${s.id}.jpg`)}>
@@ -164,7 +164,7 @@ export function SpotCard({ spot, distance, collection, here }: Props) {
             <PhotoButton
               label={spotPhoto ? '撮り直す' : '撮影する'}
               className={spotPhoto ? '' : 'primary'}
-              onPhoto={saveSpotPhoto}
+              onPhotos={([photo]) => saveSpotPhoto(photo)}
             />
             {spotPhoto && (
               <button type="button" onClick={() => shareOrDownload(spotPhoto.blob, `${spot.id}-overall.jpg`)}>

@@ -269,7 +269,7 @@ button:disabled {
   padding: 0;
   margin: 0;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
 }
 .grid button {
@@ -289,8 +289,8 @@ button:disabled {
 }
 .grid span {
   display: block;
-  font-size: 0.75rem;
-  padding: 4px;
+  font-size: 0.85rem;
+  padding: 6px 8px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
