@@ -24,8 +24,8 @@ export type BackupData = {
 type Manifest = {
   version: 1;
   exportedAt: number;
-  statuePhotos: (Omit<StatuePhoto, 'blob'> & { file: string })[];
-  panels: (Omit<Panel, 'blob'> & { file: string })[];
+  statuePhotos: (Omit<StatuePhoto, 'blob' | 'thumb'> & { file: string; thumbFile?: string })[];
+  panels: (Omit<Panel, 'blob' | 'thumb'> & { file: string; thumbFile?: string })[];
   statueNames: StatueName[];
   spotOverrides: SpotOverride[];
 };
@@ -43,15 +43,19 @@ export async function buildBackupZip(d: BackupData, now = Date.now()): Promise<U
     statueNames: d.statueNames,
     spotOverrides: d.spotOverrides,
   };
-  for (const { blob, ...rest } of d.statuePhotos) {
+  for (const { blob, thumb, ...rest } of d.statuePhotos) {
     const file = `photos/statue-${rest.statueId}.jpg`;
     files[file] = await toBytes(blob);
-    manifest.statuePhotos.push({ ...rest, file });
+    const thumbFile = thumb ? `photos/statue-${rest.statueId}-thumb.jpg` : undefined;
+    if (thumb && thumbFile) files[thumbFile] = await toBytes(thumb);
+    manifest.statuePhotos.push({ ...rest, file, ...(thumbFile ? { thumbFile } : {}) });
   }
-  for (const { blob, ...rest } of d.panels) {
+  for (const { blob, thumb, ...rest } of d.panels) {
     const file = `photos/panel-${rest.id}.jpg`;
     files[file] = await toBytes(blob);
-    manifest.panels.push({ ...rest, file });
+    const thumbFile = thumb ? `photos/panel-${rest.id}-thumb.jpg` : undefined;
+    if (thumb && thumbFile) files[thumbFile] = await toBytes(thumb);
+    manifest.panels.push({ ...rest, file, ...(thumbFile ? { thumbFile } : {}) });
   }
   files['data.json'] = strToU8(JSON.stringify(manifest));
   // JPEG は圧縮済みなので無圧縮で格納
@@ -70,8 +74,16 @@ export function parseBackupZip(zip: Uint8Array): BackupData {
     return toBlob(bytes, 'image/jpeg');
   };
   return {
-    statuePhotos: m.statuePhotos.map(({ file, ...rest }) => ({ ...rest, blob: photo(file) })),
-    panels: m.panels.map(({ file, ...rest }) => ({ ...rest, blob: photo(file) })),
+    statuePhotos: m.statuePhotos.map(({ file, thumbFile, ...rest }) => ({
+      ...rest,
+      blob: photo(file),
+      ...(thumbFile ? { thumb: photo(thumbFile) } : {}),
+    })),
+    panels: m.panels.map(({ file, thumbFile, ...rest }) => ({
+      ...rest,
+      blob: photo(file),
+      ...(thumbFile ? { thumb: photo(thumbFile) } : {}),
+    })),
     statueNames: m.statueNames,
     spotOverrides: m.spotOverrides,
   };

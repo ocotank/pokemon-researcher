@@ -6,9 +6,19 @@ import { getAllPanels, getAllStatueNames, getAllStatuePhotos, putPanel, putStatu
 const jpeg = (text: string) => new Blob([text], { type: 'image/jpeg' });
 
 const sample = (): BackupData => ({
-  statuePhotos: [{ statueId: 's1', blob: jpeg('statue'), takenAt: 10 }],
+  statuePhotos: [{ statueId: 's1', blob: jpeg('statue'), thumb: jpeg('statue-thumb'), takenAt: 10 }],
   panels: [
-    { id: 'p1', blob: jpeg('panel'), name: 'ピカチュウ', memo: 'メモ', lat: 35.68, lng: 139.77, accuracy: 15, takenAt: 20 },
+    {
+      id: 'p1',
+      blob: jpeg('panel'),
+      thumb: jpeg('panel-thumb'),
+      name: 'ピカチュウ',
+      memo: 'メモ',
+      lat: 35.68,
+      lng: 139.77,
+      accuracy: 15,
+      takenAt: 20,
+    },
     { id: 'p2', blob: jpeg('panel2'), name: '', memo: '', takenAt: 30 },
   ],
   statueNames: [{ statueId: 's1', name: 'レックウザ' }],
@@ -26,11 +36,34 @@ describe('buildBackupZip / parseBackupZip', () => {
     expect(out.spotOverrides).toEqual([{ spotId: 'x', lat: 1, lng: 2 }]);
     expect(out.statuePhotos[0].statueId).toBe('s1');
     expect(await out.statuePhotos[0].blob.text()).toBe('statue');
+    expect(await out.statuePhotos[0].thumb?.text()).toBe('statue-thumb');
     expect(out.statuePhotos[0].blob.type).toBe('image/jpeg');
-    const { blob, ...p1 } = out.panels[0];
+    const { blob, thumb, ...p1 } = out.panels[0];
     expect(p1).toEqual({ id: 'p1', name: 'ピカチュウ', memo: 'メモ', lat: 35.68, lng: 139.77, accuracy: 15, takenAt: 20 });
     expect(await blob.text()).toBe('panel');
+    expect(await thumb?.text()).toBe('panel-thumb');
     expect(out.panels[1].lat).toBeUndefined();
+  });
+
+  it('thumb のない旧形式も読み込める', () => {
+    const zip = zipSync({
+      'data.json': strToU8(
+        JSON.stringify({
+          version: 1,
+          exportedAt: 0,
+          statuePhotos: [{ statueId: 's1', takenAt: 10, file: 'photos/statue-s1.jpg' }],
+          panels: [{ id: 'p1', name: '', memo: '', takenAt: 20, file: 'photos/panel-p1.jpg' }],
+          statueNames: [],
+          spotOverrides: [],
+        }),
+      ),
+      'photos/statue-s1.jpg': strToU8('statue'),
+      'photos/panel-p1.jpg': strToU8('panel'),
+    });
+
+    const out = parseBackupZip(zip);
+    expect(out.statuePhotos[0].thumb).toBeUndefined();
+    expect(out.panels[0].thumb).toBeUndefined();
   });
 
   it('data.json が無ければエラー', () => {

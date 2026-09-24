@@ -86,6 +86,7 @@ export function SettingsTab({ collection }: { collection: Collection }) {
         </ul>
         <p className="muted">
           Safari の「履歴と Web サイトデータを消去」を行うと写真も消えます。こまめにバックアップしてください。
+          Safari のタブとホーム画面アプリは保存場所が別です。Safari で撮った写真はホーム画面アプリに出ないので、バックアップ → 読み込みで移してください。
         </p>
       </div>
 

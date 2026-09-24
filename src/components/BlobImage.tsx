@@ -10,5 +10,5 @@ export function BlobImage({ blob, alt, className, onClick }: Props) {
     return () => URL.revokeObjectURL(u);
   }, [blob]);
   if (!url) return null;
-  return <img src={url} alt={alt} className={className} onClick={onClick} />;
+  return <img src={url} alt={alt} className={className} loading="lazy" decoding="async" onClick={onClick} />;
 }

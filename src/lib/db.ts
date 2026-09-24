@@ -1,9 +1,10 @@
 import { deleteDB, openDB, type DBSchema, type IDBPDatabase } from 'idb';
 
-export type StatuePhoto = { statueId: string; blob: Blob; takenAt: number };
+export type StatuePhoto = { statueId: string; blob: Blob; thumb?: Blob; takenAt: number };
 export type Panel = {
   id: string;
   blob: Blob;
+  thumb?: Blob;
   name: string;
   memo: string;
   lat?: number;
@@ -32,8 +33,34 @@ function db(): Promise<IDBPDatabase<Schema>> {
       d.createObjectStore('statueNames', { keyPath: 'statueId' });
       d.createObjectStore('spotOverrides', { keyPath: 'spotId' });
     },
+    terminated() {
+      dbPromise = null;
+    },
+  }).catch((error) => {
+    dbPromise = null;
+    throw error;
   });
   return dbPromise;
+}
+
+function isRecoverableDBError(error: unknown): boolean {
+  return error instanceof DOMException && (error.name === 'InvalidStateError' || error.name === 'UnknownError');
+}
+
+async function withDB<T>(fn: (d: IDBPDatabase<Schema>) => Promise<T>): Promise<T> {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const connection = await db();
+    try {
+      return await fn(connection);
+    } catch (error) {
+      if (attempt === 0 && isRecoverableDBError(error)) {
+        dbPromise = null;
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw new Error('データベースを操作できませんでした');
 }
 
 export async function resetDatabase(): Promise<void> {
@@ -42,43 +69,47 @@ export async function resetDatabase(): Promise<void> {
   await deleteDB(DB_NAME);
 }
 
+export async function closeConnectionForTests(): Promise<void> {
+  (await dbPromise)?.close();
+}
+
 export async function putStatuePhoto(v: StatuePhoto): Promise<void> {
-  await (await db()).put('statuePhotos', v);
+  await withDB((d) => d.put('statuePhotos', v));
 }
 export async function getAllStatuePhotos(): Promise<StatuePhoto[]> {
-  return (await db()).getAll('statuePhotos');
+  return withDB((d) => d.getAll('statuePhotos'));
 }
 export async function deleteStatuePhoto(statueId: string): Promise<void> {
-  await (await db()).delete('statuePhotos', statueId);
+  await withDB((d) => d.delete('statuePhotos', statueId));
 }
 
 export async function putPanel(v: Panel): Promise<void> {
-  await (await db()).put('panels', v);
+  await withDB((d) => d.put('panels', v));
 }
 export async function getAllPanels(): Promise<Panel[]> {
-  const all = await (await db()).getAll('panels');
+  const all = await withDB((d) => d.getAll('panels'));
   return all.sort((a, b) => b.takenAt - a.takenAt);
 }
 export async function deletePanel(id: string): Promise<void> {
-  await (await db()).delete('panels', id);
+  await withDB((d) => d.delete('panels', id));
 }
 
 export async function putStatueName(v: StatueName): Promise<void> {
-  await (await db()).put('statueNames', v);
+  await withDB((d) => d.put('statueNames', v));
 }
 export async function getAllStatueNames(): Promise<StatueName[]> {
-  return (await db()).getAll('statueNames');
+  return withDB((d) => d.getAll('statueNames'));
 }
 export async function deleteStatueName(statueId: string): Promise<void> {
-  await (await db()).delete('statueNames', statueId);
+  await withDB((d) => d.delete('statueNames', statueId));
 }
 
 export async function putSpotOverride(v: SpotOverride): Promise<void> {
-  await (await db()).put('spotOverrides', v);
+  await withDB((d) => d.put('spotOverrides', v));
 }
 export async function getAllSpotOverrides(): Promise<SpotOverride[]> {
-  return (await db()).getAll('spotOverrides');
+  return withDB((d) => d.getAll('spotOverrides'));
 }
 export async function deleteSpotOverride(spotId: string): Promise<void> {
-  await (await db()).delete('spotOverrides', spotId);
+  await withDB((d) => d.delete('spotOverrides', spotId));
 }

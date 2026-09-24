@@ -28,3 +28,7 @@ export async function toResizedJpeg(file: Blob, max = 1600, quality = 0.85): Pro
     URL.revokeObjectURL(url);
   }
 }
+
+export function toThumbnailJpeg(file: Blob): Promise<Blob> {
+  return toResizedJpeg(file, 320, 0.8);
+}

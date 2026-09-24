@@ -16,9 +16,14 @@ export function PanelDetail({ panel, onClose, onChanged }: Props) {
   async function save() {
     try {
       await putPanel({ ...panel, name: name.trim(), memo: memo.trim() });
-      await onChanged();
     } catch (e) {
       alert(`保存できませんでした: ${errorText(e)}`);
+      return;
+    }
+    try {
+      await onChanged();
+    } catch {
+      alert('表示を更新できませんでした。アプリを開き直してください');
     }
   }
 
@@ -26,9 +31,14 @@ export function PanelDetail({ panel, onClose, onChanged }: Props) {
     if (!confirm('このパネルの記録を削除しますか？（元に戻せません）')) return;
     try {
       await deletePanel(panel.id);
-      await onChanged();
     } catch (e) {
       alert(`削除できませんでした: ${errorText(e)}`);
+      return;
+    }
+    try {
+      await onChanged();
+    } catch {
+      alert('表示を更新できませんでした。アプリを開き直してください');
     }
   }
 

@@ -1,7 +1,7 @@
 import { useRef, useState, type ChangeEvent } from 'react';
-import { toResizedJpeg } from '../lib/image';
+import { toResizedJpeg, toThumbnailJpeg } from '../lib/image';
 
-type Props = { label: string; onPhoto: (jpeg: Blob) => void | Promise<void>; className?: string };
+type Props = { label: string; onPhoto: (photo: { blob: Blob; thumb: Blob }) => void | Promise<void>; className?: string };
 
 export function PhotoButton({ label, onPhoto, className }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -13,7 +13,9 @@ export function PhotoButton({ label, onPhoto, className }: Props) {
     if (!file) return;
     setBusy(true);
     try {
-      await onPhoto(await toResizedJpeg(file));
+      const blob = await toResizedJpeg(file);
+      const thumb = await toThumbnailJpeg(blob);
+      await onPhoto({ blob, thumb });
     } catch (err) {
       alert(err instanceof Error ? err.message : String(err));
     } finally {

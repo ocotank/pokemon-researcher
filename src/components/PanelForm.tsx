@@ -5,7 +5,7 @@ import { errorText } from '../lib/errors';
 import { BlobImage } from './BlobImage';
 import { Sheet } from './Sheet';
 
-export type PanelDraft = { blob: Blob; position: Promise<Position | null> };
+export type PanelDraft = { blob: Blob; thumb: Blob; takenAt: number; position: Promise<Position | null> };
 
 type Props = { draft: PanelDraft; onClose: () => void; onSaved: () => Promise<void> };
 
@@ -25,27 +25,42 @@ export function PanelForm({ draft, onClose, onSaved }: Props) {
 
   async function save() {
     setSaving(true);
-    let saved = false;
+    let resolvedPosition = pos;
+    if (resolvedPosition === undefined) {
+      resolvedPosition = await draft.position;
+      setPos(resolvedPosition);
+    }
     try {
       await putPanel({
         id: crypto.randomUUID(),
         blob: draft.blob,
+        thumb: draft.thumb,
         name: name.trim(),
         memo: memo.trim(),
-        takenAt: Date.now(),
-        ...(pos ? { lat: pos.lat, lng: pos.lng, accuracy: pos.accuracy } : {}),
+        takenAt: draft.takenAt,
+        ...(resolvedPosition
+          ? { lat: resolvedPosition.lat, lng: resolvedPosition.lng, accuracy: resolvedPosition.accuracy }
+          : {}),
       });
-      await onSaved();
-      saved = true;
     } catch (e) {
       alert(`保存できませんでした: ${errorText(e)}`);
-    } finally {
-      if (!saved) setSaving(false);
+      setSaving(false);
+      return;
+    }
+    try {
+      await onSaved();
+    } catch {
+      alert('表示を更新できませんでした。アプリを開き直してください');
+      setSaving(false);
     }
   }
 
+  function close() {
+    if (confirm('撮影した写真を破棄しますか？')) onClose();
+  }
+
   return (
-    <Sheet title="パネルを登録" onClose={onClose}>
+    <Sheet title="パネルを登録" onClose={close}>
       <BlobImage blob={draft.blob} alt="撮影した写真" className="preview" />
       <label>
         ポケモン名（任意）
@@ -63,7 +78,7 @@ export function PanelForm({ draft, onClose, onSaved }: Props) {
             : '📍 現在地は記録されません'}
       </p>
       <button type="button" className="primary big" disabled={saving} onClick={save}>
-        {saving ? '保存中…' : '保存する'}
+        {saving ? '保存中…' : pos === undefined ? '現在地を取得してから保存…' : '保存する'}
       </button>
     </Sheet>
   );

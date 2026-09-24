@@ -24,18 +24,28 @@ export function SpotCard({ spot, distance, collection, here }: Props) {
     if (!ok) return;
     try {
       await putSpotOverride({ spotId: spot.id, lat: here.lat, lng: here.lng });
-      await collection.reload();
     } catch (e) {
       alert(`保存できませんでした: ${errorText(e)}`);
+      return;
+    }
+    try {
+      await collection.reload();
+    } catch {
+      alert('表示を更新できませんでした。アプリを開き直してください');
     }
   }
 
   async function resetLocation() {
     try {
       await deleteSpotOverride(spot.id);
-      await collection.reload();
     } catch (e) {
       alert(`削除できませんでした: ${errorText(e)}`);
+      return;
+    }
+    try {
+      await collection.reload();
+    } catch {
+      alert('表示を更新できませんでした。アプリを開き直してください');
     }
   }
 
@@ -46,15 +56,29 @@ export function SpotCard({ spot, distance, collection, here }: Props) {
     try {
       if (name) await putStatueName({ statueId, name });
       else await deleteStatueName(statueId);
-      await collection.reload();
     } catch (e) {
       alert(`${name ? '保存' : '削除'}できませんでした: ${errorText(e)}`);
+      return;
+    }
+    try {
+      await collection.reload();
+    } catch {
+      alert('表示を更新できませんでした。アプリを開き直してください');
     }
   }
 
-  async function savePhoto(statueId: string, blob: Blob) {
-    await putStatuePhoto({ statueId, blob, takenAt: Date.now() });
-    await collection.reload();
+  async function savePhoto(statueId: string, photo: { blob: Blob; thumb: Blob }) {
+    try {
+      await putStatuePhoto({ statueId, ...photo, takenAt: Date.now() });
+    } catch (e) {
+      alert(`保存できませんでした: ${errorText(e)}`);
+      return;
+    }
+    try {
+      await collection.reload();
+    } catch {
+      alert('表示を更新できませんでした。アプリを開き直してください');
+    }
   }
 
   return (
@@ -76,7 +100,7 @@ export function SpotCard({ spot, distance, collection, here }: Props) {
           return (
             <li key={s.id} className={photo ? 'done' : ''}>
               {photo ? (
-                <BlobImage blob={photo.blob} alt={s.name} className="thumb" />
+                <BlobImage blob={photo.thumb ?? photo.blob} alt={s.name} className="thumb" />
               ) : (
                 <div className="thumb empty" aria-hidden="true">
                   ?

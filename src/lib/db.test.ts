@@ -4,6 +4,7 @@ import {
   deleteSpotOverride,
   deleteStatueName,
   deleteStatuePhoto,
+  closeConnectionForTests,
   getAllPanels,
   getAllSpotOverrides,
   getAllStatueNames,
@@ -36,6 +37,15 @@ describe('statuePhotos', () => {
 });
 
 describe('panels', () => {
+  it('接続を閉じても再接続して保存・取得できる', async () => {
+    await putPanel({ id: 'before', blob: jpeg('before'), name: '', memo: '', takenAt: 1 });
+    await closeConnectionForTests();
+
+    await putPanel({ id: 'after', blob: jpeg('after'), name: '', memo: '', takenAt: 2 });
+
+    expect((await getAllPanels()).map((p) => p.id)).toEqual(['after', 'before']);
+  });
+
   it('新しい順で返す・位置なしも保存できる・削除', async () => {
     await putPanel({ id: 'p1', blob: jpeg('a'), name: '', memo: '', takenAt: 100 });
     await putPanel({ id: 'p2', blob: jpeg('b'), name: 'ピカチュウ', memo: '柱', lat: 35.68, lng: 139.77, accuracy: 20, takenAt: 200 });

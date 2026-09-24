@@ -20,7 +20,7 @@ export function PanelTab({ collection }: { collection: Collection }) {
       <PhotoButton
         label="＋ 見つけた！"
         className="primary big"
-        onPhoto={(blob) => setDraft({ blob, position: getPositionOnce() })}
+        onPhoto={({ blob, thumb }) => setDraft({ blob, thumb, takenAt: Date.now(), position: getPositionOnce() })}
       />
       {collection.panels.length === 0 ? (
         <p className="empty-text">街で見つけたパネルを撮影して集めよう</p>
@@ -29,7 +29,7 @@ export function PanelTab({ collection }: { collection: Collection }) {
           {collection.panels.map((p) => (
             <li key={p.id}>
               <button type="button" onClick={() => setSelected(p)}>
-                <BlobImage blob={p.blob} alt={p.name || 'パネル'} />
+                <BlobImage blob={p.thumb ?? p.blob} alt={p.name || 'パネル'} />
                 <span>{p.name || '名前なし'}</span>
               </button>
             </li>
@@ -41,8 +41,8 @@ export function PanelTab({ collection }: { collection: Collection }) {
           draft={draft}
           onClose={() => setDraft(null)}
           onSaved={async () => {
-            setDraft(null);
             await collection.reload();
+            setDraft(null);
           }}
         />
       )}
@@ -51,8 +51,8 @@ export function PanelTab({ collection }: { collection: Collection }) {
           panel={selected}
           onClose={() => setSelected(null)}
           onChanged={async () => {
-            setSelected(null);
             await collection.reload();
+            setSelected(null);
           }}
         />
       )}
