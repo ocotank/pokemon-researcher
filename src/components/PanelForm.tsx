@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Position } from '../hooks/useGeolocation';
 import { putPanel } from '../lib/db';
+import { errorText } from '../lib/errors';
 import { BlobImage } from './BlobImage';
 import { Sheet } from './Sheet';
 
@@ -24,15 +25,23 @@ export function PanelForm({ draft, onClose, onSaved }: Props) {
 
   async function save() {
     setSaving(true);
-    await putPanel({
-      id: crypto.randomUUID(),
-      blob: draft.blob,
-      name: name.trim(),
-      memo: memo.trim(),
-      takenAt: Date.now(),
-      ...(pos ? { lat: pos.lat, lng: pos.lng, accuracy: pos.accuracy } : {}),
-    });
-    await onSaved();
+    let saved = false;
+    try {
+      await putPanel({
+        id: crypto.randomUUID(),
+        blob: draft.blob,
+        name: name.trim(),
+        memo: memo.trim(),
+        takenAt: Date.now(),
+        ...(pos ? { lat: pos.lat, lng: pos.lng, accuracy: pos.accuracy } : {}),
+      });
+      await onSaved();
+      saved = true;
+    } catch (e) {
+      alert(`保存できませんでした: ${errorText(e)}`);
+    } finally {
+      if (!saved) setSaving(false);
+    }
   }
 
   return (

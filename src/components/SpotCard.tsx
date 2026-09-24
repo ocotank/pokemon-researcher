@@ -2,6 +2,7 @@ import type { Spot } from '../data/spots';
 import type { Collection } from '../hooks/useCollection';
 import type { Position } from '../hooks/useGeolocation';
 import { deleteSpotOverride, deleteStatueName, putSpotOverride, putStatueName, putStatuePhoto } from '../lib/db';
+import { errorText } from '../lib/errors';
 import { directionsUrl, formatDistance } from '../lib/geo';
 import { shareOrDownload } from '../lib/share';
 import { BlobImage } from './BlobImage';
@@ -21,22 +22,34 @@ export function SpotCard({ spot, distance, collection, here }: Props) {
       `「${spot.facility} ${spot.floor} ${spot.place}」の位置を現在地（誤差 ±${Math.round(here.accuracy)}m）にしますか？`,
     );
     if (!ok) return;
-    await putSpotOverride({ spotId: spot.id, lat: here.lat, lng: here.lng });
-    await collection.reload();
+    try {
+      await putSpotOverride({ spotId: spot.id, lat: here.lat, lng: here.lng });
+      await collection.reload();
+    } catch (e) {
+      alert(`保存できませんでした: ${errorText(e)}`);
+    }
   }
 
   async function resetLocation() {
-    await deleteSpotOverride(spot.id);
-    await collection.reload();
+    try {
+      await deleteSpotOverride(spot.id);
+      await collection.reload();
+    } catch (e) {
+      alert(`削除できませんでした: ${errorText(e)}`);
+    }
   }
 
   async function rename(statueId: string, current: string) {
     const next = prompt('ポケモンの名前（空にすると元に戻ります）', current);
     if (next === null) return;
     const name = next.trim();
-    if (name) await putStatueName({ statueId, name });
-    else await deleteStatueName(statueId);
-    await collection.reload();
+    try {
+      if (name) await putStatueName({ statueId, name });
+      else await deleteStatueName(statueId);
+      await collection.reload();
+    } catch (e) {
+      alert(`${name ? '保存' : '削除'}できませんでした: ${errorText(e)}`);
+    }
   }
 
   async function savePhoto(statueId: string, blob: Blob) {

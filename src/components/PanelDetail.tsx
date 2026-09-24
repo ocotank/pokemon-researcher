@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { deletePanel, putPanel, type Panel } from '../lib/db';
+import { errorText } from '../lib/errors';
 import { placeUrl } from '../lib/geo';
 import { shareOrDownload } from '../lib/share';
 import { BlobImage } from './BlobImage';
@@ -13,14 +14,22 @@ export function PanelDetail({ panel, onClose, onChanged }: Props) {
   const dirty = name.trim() !== panel.name || memo.trim() !== panel.memo;
 
   async function save() {
-    await putPanel({ ...panel, name: name.trim(), memo: memo.trim() });
-    await onChanged();
+    try {
+      await putPanel({ ...panel, name: name.trim(), memo: memo.trim() });
+      await onChanged();
+    } catch (e) {
+      alert(`保存できませんでした: ${errorText(e)}`);
+    }
   }
 
   async function remove() {
     if (!confirm('このパネルの記録を削除しますか？（元に戻せません）')) return;
-    await deletePanel(panel.id);
-    await onChanged();
+    try {
+      await deletePanel(panel.id);
+      await onChanged();
+    } catch (e) {
+      alert(`削除できませんでした: ${errorText(e)}`);
+    }
   }
 
   return (

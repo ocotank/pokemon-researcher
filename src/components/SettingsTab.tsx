@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import type { Collection } from '../hooks/useCollection';
 import { backupFileName, exportBackup, importBackup } from '../lib/backup';
+import { errorText } from '../lib/errors';
 import { shareOrDownload } from '../lib/share';
-
-const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 function isStandalone(): boolean {
   return (
