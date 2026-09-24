@@ -38,3 +38,8 @@ export function directionsUrl(to: LatLng): string {
 export function placeUrl(p: LatLng): string {
   return `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`;
 }
+
+// APIキー不要の Google マップ埋め込み URL（iframe 用）
+export function embedMapUrl(p: LatLng, zoom = 17): string {
+  return `https://maps.google.com/maps?q=${p.lat},${p.lng}&z=${zoom}&output=embed`;
+}

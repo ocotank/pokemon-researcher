@@ -3,10 +3,11 @@ import type { Collection } from '../hooks/useCollection';
 import type { Position } from '../hooks/useGeolocation';
 import { deleteSpotOverride, deleteStatueName, putSpotOverride, putStatueName, putStatuePhoto } from '../lib/db';
 import { errorText } from '../lib/errors';
-import { directionsUrl, formatDistance } from '../lib/geo';
+import { formatDistance } from '../lib/geo';
 import { shareOrDownload } from '../lib/share';
 import { BlobImage } from './BlobImage';
 import { PhotoButton } from './PhotoButton';
+import { SpotMap } from './SpotMap';
 
 type Props = { spot: Spot; distance: number | null; collection: Collection; here: Position | null };
 
@@ -94,6 +95,8 @@ export function SpotCard({ spot, distance, collection, here }: Props) {
         {distance !== null && <p className="distance">{formatDistance(distance)}</p>}
       </div>
 
+      <SpotMap at={spot} label={`${spot.facility} ${spot.floor} ${spot.place}`} />
+
       <ul className="statues">
         {spot.statues.map((s) => {
           const photo = collection.statuePhotos.get(s.id);
@@ -128,9 +131,6 @@ export function SpotCard({ spot, distance, collection, here }: Props) {
       </ul>
 
       <div className="actions">
-        <a className="button" href={directionsUrl(spot)} target="_blank" rel="noopener noreferrer">
-          Googleマップで道順
-        </a>
         <button type="button" className="link" onClick={fixLocation}>
           ここを正しい位置にする
         </button>
