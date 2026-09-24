@@ -1,7 +1,11 @@
-import { useRef, useState, type ChangeEvent } from 'react';
+import { type ChangeEvent, useRef, useState } from 'react';
 import { toResizedJpeg, toThumbnailJpeg } from '../lib/image';
 
-type Props = { label: string; onPhoto: (photo: { blob: Blob; thumb: Blob }) => void | Promise<void>; className?: string };
+type Props = {
+  label: string;
+  onPhoto: (photo: { blob: Blob; thumb: Blob }) => void | Promise<void>;
+  className?: string;
+};
 
 export function PhotoButton({ label, onPhoto, className }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);

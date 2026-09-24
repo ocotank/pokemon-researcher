@@ -1,6 +1,6 @@
 import { strToU8, zipSync } from 'fflate';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { backupFileName, buildBackupZip, exportBackup, importBackup, parseBackupZip, type BackupData } from './backup';
+import { type BackupData, backupFileName, buildBackupZip, exportBackup, importBackup, parseBackupZip } from './backup';
 import { getAllPanels, getAllStatueNames, getAllStatuePhotos, putPanel, putStatuePhoto, resetDatabase } from './db';
 
 const jpeg = (text: string) => new Blob([text], { type: 'image/jpeg' });
@@ -39,7 +39,15 @@ describe('buildBackupZip / parseBackupZip', () => {
     expect(await out.statuePhotos[0].thumb?.text()).toBe('statue-thumb');
     expect(out.statuePhotos[0].blob.type).toBe('image/jpeg');
     const { blob, thumb, ...p1 } = out.panels[0];
-    expect(p1).toEqual({ id: 'p1', name: 'ピカチュウ', memo: 'メモ', lat: 35.68, lng: 139.77, accuracy: 15, takenAt: 20 });
+    expect(p1).toEqual({
+      id: 'p1',
+      name: 'ピカチュウ',
+      memo: 'メモ',
+      lat: 35.68,
+      lng: 139.77,
+      accuracy: 15,
+      takenAt: 20,
+    });
     expect(await blob.text()).toBe('panel');
     expect(await thumb?.text()).toBe('panel-thumb');
     expect(out.panels[1].lat).toBeUndefined();

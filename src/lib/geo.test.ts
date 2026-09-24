@@ -44,7 +44,10 @@ describe('sortByDistance', () => {
   it('現在地から近い順に並べる', () => {
     const out = sortByDistance([a, b], { lat: 35.6795, lng: 139.7691 });
     expect(out.map((x) => x.item.id)).toEqual(['b', 'a']);
-    expect(out[0].distance).toBeLessThan(out[1].distance!);
+    const firstDistance = out[0].distance;
+    const secondDistance = out[1].distance;
+    if (firstDistance === null || secondDistance === null) throw new Error('距離が計算されていません');
+    expect(firstDistance).toBeLessThan(secondDistance);
   });
 });
 
@@ -56,8 +59,6 @@ describe('URL', () => {
   });
 
   it('場所の URL', () => {
-    expect(placeUrl({ lat: 35.1, lng: 139.2 })).toBe(
-      'https://www.google.com/maps/search/?api=1&query=35.1,139.2',
-    );
+    expect(placeUrl({ lat: 35.1, lng: 139.2 })).toBe('https://www.google.com/maps/search/?api=1&query=35.1,139.2');
   });
 });

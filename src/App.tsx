@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { TabBar, type Tab } from './components/TabBar';
 import { PanelTab } from './components/PanelTab';
 import { SettingsTab } from './components/SettingsTab';
 import { StatueTab } from './components/StatueTab';
+import { type Tab, TabBar } from './components/TabBar';
 import { useCollection } from './hooks/useCollection';
 import { useGeolocation } from './hooks/useGeolocation';
 

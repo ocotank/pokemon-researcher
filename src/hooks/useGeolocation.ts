@@ -32,7 +32,8 @@ export function useGeolocation(enabled: boolean): GeoState {
             ? {
                 status: 'denied',
                 position: null,
-                message: '位置情報が許可されていません。設定アプリ →「プライバシーとセキュリティ」→「位置情報サービス」→「Safari Webサイト」から許可してください',
+                message:
+                  '位置情報が許可されていません。設定アプリ →「プライバシーとセキュリティ」→「位置情報サービス」→「Safari Webサイト」から許可してください',
               }
             : {
                 status: 'error',

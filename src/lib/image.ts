@@ -18,11 +18,7 @@ export async function toResizedJpeg(file: Blob, max = 1600, quality = 0.85): Pro
     if (!ctx) throw new Error('画像を処理できませんでした');
     ctx.drawImage(img, 0, 0, width, height);
     return await new Promise<Blob>((resolve, reject) =>
-      canvas.toBlob(
-        (b) => (b ? resolve(b) : reject(new Error('画像を保存できませんでした'))),
-        'image/jpeg',
-        quality,
-      ),
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('画像を保存できませんでした'))), 'image/jpeg', quality),
     );
   } finally {
     URL.revokeObjectURL(url);

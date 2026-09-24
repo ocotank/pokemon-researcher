@@ -4,7 +4,7 @@ import { getPositionOnce } from '../hooks/useGeolocation';
 import type { Panel } from '../lib/db';
 import { BlobImage } from './BlobImage';
 import { PanelDetail } from './PanelDetail';
-import { PanelForm, type PanelDraft } from './PanelForm';
+import { type PanelDraft, PanelForm } from './PanelForm';
 import { PhotoButton } from './PhotoButton';
 
 export function PanelTab({ collection }: { collection: Collection }) {

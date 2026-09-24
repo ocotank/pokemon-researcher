@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ALL_STATUES, SPOTS, applyOverrides } from './spots';
+import { ALL_STATUES, applyOverrides, SPOTS } from './spots';
 
 describe('SPOTS', () => {
   it('公式 MAP どおり 9 スポット・19 体', () => {

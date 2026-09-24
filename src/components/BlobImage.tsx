@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 
-type Props = { blob: Blob; alt: string; className?: string; onClick?: () => void };
+type Props = { blob: Blob; alt: string; className?: string };
 
-export function BlobImage({ blob, alt, className, onClick }: Props) {
+export function BlobImage({ blob, alt, className }: Props) {
   const [url, setUrl] = useState<string>();
   useEffect(() => {
     const u = URL.createObjectURL(blob);
@@ -10,5 +10,5 @@ export function BlobImage({ blob, alt, className, onClick }: Props) {
     return () => URL.revokeObjectURL(u);
   }, [blob]);
   if (!url) return null;
-  return <img src={url} alt={alt} className={className} loading="lazy" decoding="async" onClick={onClick} />;
+  return <img src={url} alt={alt} className={className} loading="lazy" decoding="async" />;
 }

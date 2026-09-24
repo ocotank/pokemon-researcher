@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
+  closeConnectionForTests,
   deletePanel,
   deleteSpotOverride,
   deleteStatueName,
   deleteStatuePhoto,
-  closeConnectionForTests,
   getAllPanels,
   getAllSpotOverrides,
   getAllStatueNames,
@@ -48,7 +48,16 @@ describe('panels', () => {
 
   it('新しい順で返す・位置なしも保存できる・削除', async () => {
     await putPanel({ id: 'p1', blob: jpeg('a'), name: '', memo: '', takenAt: 100 });
-    await putPanel({ id: 'p2', blob: jpeg('b'), name: 'ピカチュウ', memo: '柱', lat: 35.68, lng: 139.77, accuracy: 20, takenAt: 200 });
+    await putPanel({
+      id: 'p2',
+      blob: jpeg('b'),
+      name: 'ピカチュウ',
+      memo: '柱',
+      lat: 35.68,
+      lng: 139.77,
+      accuracy: 20,
+      takenAt: 200,
+    });
     const all = await getAllPanels();
     expect(all.map((p) => p.id)).toEqual(['p2', 'p1']);
     expect(all[0].lat).toBe(35.68);

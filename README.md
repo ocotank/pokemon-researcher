@@ -8,7 +8,10 @@
 ```bash
 npm install
 npm run dev      # http://localhost:5173/
+npm run lint
+npm run lint:fix
 npm test
+npm run test:coverage
 npm run build
 ```
 
