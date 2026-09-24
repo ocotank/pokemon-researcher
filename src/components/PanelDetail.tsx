@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { deletePanel, putPanel, type Panel } from '../lib/db';
+import { deletePanel, type Panel, putPanel } from '../lib/db';
 import { errorText } from '../lib/errors';
 import { placeUrl } from '../lib/geo';
 import { shareOrDownload } from '../lib/share';

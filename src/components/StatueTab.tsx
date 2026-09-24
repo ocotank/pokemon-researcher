@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { ALL_STATUES, SPOTS, applyOverrides } from '../data/spots';
+import { ALL_STATUES, applyOverrides, SPOTS } from '../data/spots';
 import type { Collection } from '../hooks/useCollection';
 import type { GeoState } from '../hooks/useGeolocation';
 import { sortByDistance } from '../lib/geo';

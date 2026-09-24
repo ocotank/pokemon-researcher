@@ -1,4 +1,4 @@
-import { deleteDB, openDB, type DBSchema, type IDBPDatabase, type StoreNames } from 'idb';
+import { type DBSchema, deleteDB, type IDBPDatabase, openDB, type StoreNames } from 'idb';
 
 export type StatuePhoto = { statueId: string; blob: Blob; thumb?: Blob; takenAt: number };
 export type Panel = {

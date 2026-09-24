@@ -1,6 +1,6 @@
 import { useInView } from '../hooks/useInView';
-import { directionsUrl, embedMapUrl } from '../lib/geo';
 import type { LatLng } from '../lib/geo';
+import { directionsUrl, embedMapUrl } from '../lib/geo';
 
 type Props = { at: LatLng; label: string };
 

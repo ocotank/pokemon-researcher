@@ -7,8 +7,7 @@ const rad = (deg: number) => (deg * Math.PI) / 180;
 export function distanceMeters(a: LatLng, b: LatLng): number {
   const dLat = rad(b.lat - a.lat);
   const dLng = rad(b.lng - a.lng);
-  const h =
-    Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
   return 2 * EARTH_RADIUS_M * Math.asin(Math.sqrt(h));
 }
 
@@ -21,14 +20,9 @@ export function formatDistance(m: number): string {
 
 export type WithDistance<T> = { item: T; distance: number | null };
 
-export function sortByDistance<T extends LatLng>(
-  items: readonly T[],
-  here: LatLng | null,
-): WithDistance<T>[] {
+export function sortByDistance<T extends LatLng>(items: readonly T[], here: LatLng | null): WithDistance<T>[] {
   if (!here) return items.map((item) => ({ item, distance: null }));
-  return items
-    .map((item) => ({ item, distance: distanceMeters(here, item) }))
-    .sort((x, y) => x.distance - y.distance);
+  return items.map((item) => ({ item, distance: distanceMeters(here, item) })).sort((x, y) => x.distance - y.distance);
 }
 
 export function directionsUrl(to: LatLng): string {

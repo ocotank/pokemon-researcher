@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { type ChangeEvent, useEffect, useRef, useState } from 'react';
 import type { Collection } from '../hooks/useCollection';
 import { backupFileName, exportBackup, importBackup } from '../lib/backup';
 import { errorText } from '../lib/errors';
@@ -57,7 +57,9 @@ export function SettingsTab({ collection }: { collection: Collection }) {
 
       <div className="card">
         <h2>バックアップ</h2>
-        <p>写真 {photoCount}枚と記録を 1 つのファイルにまとめます。共有シートで「"ファイル"に保存」を選んでください。</p>
+        <p>
+          写真 {photoCount}枚と記録を 1 つのファイルにまとめます。共有シートで「"ファイル"に保存」を選んでください。
+        </p>
         <div className="actions">
           {backup ? (
             <button type="button" className="primary" onClick={() => shareOrDownload(backup.blob, backup.name)}>
@@ -85,8 +87,9 @@ export function SettingsTab({ collection }: { collection: Collection }) {
           <li>データの永続化：{persisted === null ? '不明' : persisted ? '有効 ✅' : '未許可 ⚠️'}</li>
         </ul>
         <p className="muted">
-          Safari の「履歴と Web サイトデータを消去」を行うと写真も消えます。こまめにバックアップしてください。
-          Safari のタブとホーム画面アプリは保存場所が別です。Safari で撮った写真はホーム画面アプリに出ないので、バックアップ → 読み込みで移してください。
+          Safari の「履歴と Web サイトデータを消去」を行うと写真も消えます。こまめにバックアップしてください。 Safari
+          のタブとホーム画面アプリは保存場所が別です。Safari で撮った写真はホーム画面アプリに出ないので、バックアップ →
+          読み込みで移してください。
         </p>
       </div>
 
