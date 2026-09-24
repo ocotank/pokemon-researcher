@@ -7,7 +7,6 @@ type Props = { at: LatLng; label: string };
 // 地図はプレビュー表示のみ。クロスオリジンの iframe 内のクリックは拾えないため、
 // 透明なリンクを重ねて「地図をタップ＝道順を開く」に一本化している。
 // iframe は画面に近づいたカードだけに置き、スクロールに応じて順次読み込む。
-// スポット位置は CSS で中心にドットを重ねて示す（埋め込み地図はマーカーを描かないため）。
 export function SpotMap({ at, label }: Props) {
   const { ref, inView } = useInView<HTMLDivElement>();
 
