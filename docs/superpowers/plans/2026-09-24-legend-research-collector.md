@@ -1,16 +1,16 @@
-# レジェンドリサーチ・コレクター Implementation Plan
+# レジェンドリサーチ・コレクター 実装計画
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **エージェント向け:** このプランはタスクごとに superpowers:subagent-driven-development（推奨）または superpowers:executing-plans で実行する。各ステップはチェックボックス（`- [ ]`）で進捗を管理する。
 
-**Goal:** iPhone Safari 向けの PWA。立像 19 体を現在地から近い順に表示して写真を集め、街中のパネルを見つけ次第写真＋位置で記録する。
+**目的:** iPhone Safari 向けの PWA。立像 19 体を現在地から近い順に表示して写真を集め、街中のパネルを見つけ次第写真＋位置で記録する。
 
-**Architecture:** Vite + React + TypeScript のクライアントのみのアプリ。データは端末内 IndexedDB に保存し、バックアップは ZIP で書き出し／読み込み。純粋ロジック（距離・データ解決・バックアップ・DB）を `src/lib` と `src/data` に分けて Vitest でテストし、UI は `src/components` に置く。
+**構成:** Vite + React + TypeScript のクライアントのみのアプリ。データは端末内 IndexedDB に保存し、バックアップは ZIP で書き出し／読み込み。純粋ロジック（距離・データ解決・バックアップ・DB）を `src/lib` と `src/data` に分けて Vitest でテストし、UI は `src/components` に置く。
 
-**Tech Stack:** Vite 8, React 19, TypeScript 5.9, vite-plugin-pwa 1.x, idb 8, fflate 0.8, Vitest 5, fake-indexeddb 6, @vite-pwa/assets-generator
+**技術スタック:** Vite 8, React 19, TypeScript 5.9, vite-plugin-pwa 1.x, idb 8, fflate 0.8, Vitest 5, fake-indexeddb 6, @vite-pwa/assets-generator
 
-**Spec:** `docs/superpowers/specs/2026-09-24-legend-research-collector-design.md`
+**設計書:** `docs/superpowers/specs/2026-09-24-legend-research-collector-design.md`
 
-## Global Constraints
+## 全体の制約
 
 - 対象ブラウザ: iPhone Safari（ホーム画面追加の standalone 表示を含む）。Node 24 で開発。
 - 写真・記録はすべて端末内 IndexedDB（DB 名 `legend-research`, version 1）。外部送信しない。
@@ -22,7 +22,7 @@
 - TypeScript は `typescript@~5.9` に固定（7.x はネイティブ版で互換性リスクがあるため）。
 - `crypto.randomUUID` と位置情報はセキュアコンテキスト（https / localhost）でのみ動く。LAN の `http://192.168.x.x` で iPhone から開くと動かない。
 
-## File Structure
+## ファイル構成
 
 ```
 package.json, tsconfig.json, vite.config.ts, index.html, .gitignore, README.md
@@ -49,21 +49,21 @@ src/
 
 ---
 
-### Task 1: プロジェクト雛形と立像データ
+### タスク 1: プロジェクト雛形と立像データ
 
-**Files:**
-- Create: `package.json`, `tsconfig.json`, `vite.config.ts`, `index.html`, `.gitignore`, `src/main.tsx`, `src/App.tsx`, `src/index.css`, `src/test/setup.ts`
-- Create: `src/data/spots.ts`
-- Test: `src/data/spots.test.ts`
+**ファイル:**
+- 新規: `package.json`, `tsconfig.json`, `vite.config.ts`, `index.html`, `.gitignore`, `src/main.tsx`, `src/App.tsx`, `src/index.css`, `src/test/setup.ts`
+- 新規: `src/data/spots.ts`
+- テスト: `src/data/spots.test.ts`
 
-**Interfaces:**
-- Produces:
+**インターフェース:**
+- 提供:
   - `type Statue = { id: string; name: string; tentative: boolean }`
   - `type Spot = { id: string; facility: string; floor: string; place: string; lat: number; lng: number; statues: Statue[] }`
   - `const SPOTS: readonly Spot[]`, `const ALL_STATUES: readonly Statue[]`
   - `applyOverrides(spots: readonly Spot[], overrides: ReadonlyMap<string, { lat: number; lng: number }>, names: ReadonlyMap<string, string>): Spot[]`
 
-- [ ] **Step 1: 設定ファイルを作成**
+- [ ] **ステップ 1: 設定ファイルを作成**
 
 `package.json`:
 ```json
@@ -104,7 +104,7 @@ src/
 }
 ```
 
-`vite.config.ts`（PWA は Task 10 で追加）:
+`vite.config.ts`（PWA は タスク 10 で追加）:
 ```ts
 /// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
@@ -161,30 +161,30 @@ createRoot(document.getElementById('root')!).render(
 );
 ```
 
-`src/App.tsx`（Task 6 で置き換え）:
+`src/App.tsx`（タスク 6 で置き換え）:
 ```tsx
 export default function App() {
   return <p>レジェンドリサーチ・コレクター</p>;
 }
 ```
 
-`src/index.css`: 空ファイル（Task 6 で中身を書く）。
+`src/index.css`: 空ファイル（タスク 6 で中身を書く）。
 
 `src/test/setup.ts`:
 ```ts
 import 'fake-indexeddb/auto';
 ```
 
-- [ ] **Step 2: 依存をインストール**
+- [ ] **ステップ 2: 依存をインストール**
 
-Run:
+実行:
 ```bash
 npm install react@^19 react-dom@^19 idb@^8 fflate@^0.8
 npm install -D vite@^8 @vitejs/plugin-react@^6 typescript@~5.9 @types/react@^19 @types/react-dom@^19 @types/node@^24 vitest@^5 fake-indexeddb@^6 vite-plugin-pwa@^1 @vite-pwa/assets-generator@^1 workbox-window@^7
 ```
-Expected: エラーなく完了し `package-lock.json` ができる。
+期待結果: エラーなく完了し `package-lock.json` ができる。
 
-- [ ] **Step 3: 失敗するテストを書く** — `src/data/spots.test.ts`
+- [ ] **ステップ 3: 失敗するテストを書く** — `src/data/spots.test.ts`
 
 ```ts
 import { describe, expect, it } from 'vitest';
@@ -235,12 +235,12 @@ describe('applyOverrides', () => {
 });
 ```
 
-- [ ] **Step 4: 失敗を確認**
+- [ ] **ステップ 4: 失敗を確認**
 
-Run: `npx vitest run src/data/spots.test.ts`
-Expected: FAIL（`./spots` が見つからない）
+実行: `npx vitest run src/data/spots.test.ts`
+期待結果: FAIL（`./spots` が見つからない）
 
-- [ ] **Step 5: 実装** — `src/data/spots.ts`
+- [ ] **ステップ 5: 実装** — `src/data/spots.ts`
 
 ```ts
 // 公式サイト（https://mitsui-shopping-park.com/urban/legend-research/）の会場 MAP より。
@@ -393,12 +393,12 @@ export function applyOverrides(
 }
 ```
 
-- [ ] **Step 6: テストとビルドが通ることを確認**
+- [ ] **ステップ 6: テストとビルドが通ることを確認**
 
-Run: `npx vitest run src/data/spots.test.ts && npm run build`
-Expected: 6 tests PASS、ビルド成功（`dist/` ができる）
+実行: `npx vitest run src/data/spots.test.ts && npm run build`
+期待結果: 6 tests PASS、ビルド成功（`dist/` ができる）
 
-- [ ] **Step 7: Commit**
+- [ ] **ステップ 7: Commit**
 
 ```bash
 git add -A
@@ -407,14 +407,14 @@ git commit -m "feat: プロジェクト雛形と立像スポットデータを�
 
 ---
 
-### Task 2: 距離計算と地図 URL（`lib/geo.ts`）
+### タスク 2: 距離計算と地図 URL（`lib/geo.ts`）
 
-**Files:**
-- Create: `src/lib/geo.ts`
-- Test: `src/lib/geo.test.ts`
+**ファイル:**
+- 新規: `src/lib/geo.ts`
+- テスト: `src/lib/geo.test.ts`
 
-**Interfaces:**
-- Produces:
+**インターフェース:**
+- 提供:
   - `type LatLng = { lat: number; lng: number }`
   - `distanceMeters(a: LatLng, b: LatLng): number`
   - `formatDistance(m: number): string`
@@ -422,7 +422,7 @@ git commit -m "feat: プロジェクト雛形と立像スポットデータを�
   - `sortByDistance<T extends LatLng>(items: readonly T[], here: LatLng | null): WithDistance<T>[]`
   - `directionsUrl(to: LatLng): string`, `placeUrl(p: LatLng): string`
 
-- [ ] **Step 1: 失敗するテストを書く** — `src/lib/geo.test.ts`
+- [ ] **ステップ 1: 失敗するテストを書く** — `src/lib/geo.test.ts`
 
 ```ts
 import { describe, expect, it } from 'vitest';
@@ -490,12 +490,12 @@ describe('URL', () => {
 });
 ```
 
-- [ ] **Step 2: 失敗を確認**
+- [ ] **ステップ 2: 失敗を確認**
 
-Run: `npx vitest run src/lib/geo.test.ts`
-Expected: FAIL（`./geo` が見つからない）
+実行: `npx vitest run src/lib/geo.test.ts`
+期待結果: FAIL（`./geo` が見つからない）
 
-- [ ] **Step 3: 実装** — `src/lib/geo.ts`
+- [ ] **ステップ 3: 実装** — `src/lib/geo.ts`
 
 ```ts
 export type LatLng = { lat: number; lng: number };
@@ -540,12 +540,12 @@ export function placeUrl(p: LatLng): string {
 }
 ```
 
-- [ ] **Step 4: 通ることを確認**
+- [ ] **ステップ 4: 通ることを確認**
 
-Run: `npx vitest run src/lib/geo.test.ts`
-Expected: PASS
+実行: `npx vitest run src/lib/geo.test.ts`
+期待結果: PASS
 
-- [ ] **Step 5: Commit**
+- [ ] **ステップ 5: Commit**
 
 ```bash
 git add src/lib/geo.ts src/lib/geo.test.ts
@@ -554,14 +554,14 @@ git commit -m "feat: 距離計算と Google マップ URL を追加"
 
 ---
 
-### Task 3: IndexedDB アクセス（`lib/db.ts`）
+### タスク 3: IndexedDB アクセス（`lib/db.ts`）
 
-**Files:**
-- Create: `src/lib/db.ts`
-- Test: `src/lib/db.test.ts`
+**ファイル:**
+- 新規: `src/lib/db.ts`
+- テスト: `src/lib/db.test.ts`
 
-**Interfaces:**
-- Produces:
+**インターフェース:**
+- 提供:
   - `type StatuePhoto = { statueId: string; blob: Blob; takenAt: number }`
   - `type Panel = { id: string; blob: Blob; name: string; memo: string; lat?: number; lng?: number; accuracy?: number; takenAt: number }`
   - `type StatueName = { statueId: string; name: string }`
@@ -573,7 +573,7 @@ git commit -m "feat: 距離計算と Google マップ URL を追加"
   - `resetDatabase(): Promise<void>`（テスト用。接続を閉じて DB を削除）
   - put/delete はすべて `Promise<void>`
 
-- [ ] **Step 1: 失敗するテストを書く** — `src/lib/db.test.ts`
+- [ ] **ステップ 1: 失敗するテストを書く** — `src/lib/db.test.ts`
 
 ```ts
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -642,12 +642,12 @@ describe('statueNames / spotOverrides', () => {
 });
 ```
 
-- [ ] **Step 2: 失敗を確認**
+- [ ] **ステップ 2: 失敗を確認**
 
-Run: `npx vitest run src/lib/db.test.ts`
-Expected: FAIL（`./db` が見つからない）
+実行: `npx vitest run src/lib/db.test.ts`
+期待結果: FAIL（`./db` が見つからない）
 
-- [ ] **Step 3: 実装** — `src/lib/db.ts`
+- [ ] **ステップ 3: 実装** — `src/lib/db.ts`
 
 ```ts
 import { deleteDB, openDB, type DBSchema, type IDBPDatabase } from 'idb';
@@ -736,12 +736,12 @@ export async function deleteSpotOverride(spotId: string): Promise<void> {
 }
 ```
 
-- [ ] **Step 4: 通ることを確認**
+- [ ] **ステップ 4: 通ることを確認**
 
-Run: `npx vitest run src/lib/db.test.ts`
-Expected: PASS
+実行: `npx vitest run src/lib/db.test.ts`
+期待結果: PASS
 
-- [ ] **Step 5: Commit**
+- [ ] **ステップ 5: Commit**
 
 ```bash
 git add src/lib/db.ts src/lib/db.test.ts
@@ -750,15 +750,15 @@ git commit -m "feat: IndexedDB の保存・取得・削除を追加"
 
 ---
 
-### Task 4: バックアップ ZIP（`lib/backup.ts`）
+### タスク 4: バックアップ ZIP（`lib/backup.ts`）
 
-**Files:**
-- Create: `src/lib/backup.ts`
-- Test: `src/lib/backup.test.ts`
+**ファイル:**
+- 新規: `src/lib/backup.ts`
+- テスト: `src/lib/backup.test.ts`
 
-**Interfaces:**
-- Consumes: Task 3 の型と `getAll*` / `put*`
-- Produces:
+**インターフェース:**
+- 利用: タスク 3 の型と `getAll*` / `put*`
+- 提供:
   - `type BackupData = { statuePhotos: StatuePhoto[]; panels: Panel[]; statueNames: StatueName[]; spotOverrides: SpotOverride[] }`
   - `buildBackupZip(d: BackupData, now?: number): Promise<Uint8Array>`
   - `parseBackupZip(zip: Uint8Array): BackupData`（不正なら日本語メッセージの Error を投げる）
@@ -766,7 +766,7 @@ git commit -m "feat: IndexedDB の保存・取得・削除を追加"
   - `importBackup(zip: Uint8Array): Promise<{ statuePhotos: number; panels: number }>`（マージ、同 ID 上書き）
   - `backupFileName(d?: Date): string` → `backup-YYYYMMDD-HHmm.zip`
 
-- [ ] **Step 1: 失敗するテストを書く** — `src/lib/backup.test.ts`
+- [ ] **ステップ 1: 失敗するテストを書く** — `src/lib/backup.test.ts`
 
 ```ts
 import { strToU8, zipSync } from 'fflate';
@@ -843,12 +843,12 @@ describe('backupFileName', () => {
 });
 ```
 
-- [ ] **Step 2: 失敗を確認**
+- [ ] **ステップ 2: 失敗を確認**
 
-Run: `npx vitest run src/lib/backup.test.ts`
-Expected: FAIL（`./backup` が見つからない）
+実行: `npx vitest run src/lib/backup.test.ts`
+期待結果: FAIL（`./backup` が見つからない）
 
-- [ ] **Step 3: 実装** — `src/lib/backup.ts`
+- [ ] **ステップ 3: 実装** — `src/lib/backup.ts`
 
 ```ts
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
@@ -956,12 +956,12 @@ export function backupFileName(d = new Date()): string {
 }
 ```
 
-- [ ] **Step 4: 通ることを確認**
+- [ ] **ステップ 4: 通ることを確認**
 
-Run: `npx vitest run src/lib/backup.test.ts`
-Expected: PASS
+実行: `npx vitest run src/lib/backup.test.ts`
+期待結果: PASS
 
-- [ ] **Step 5: Commit**
+- [ ] **ステップ 5: Commit**
 
 ```bash
 git add src/lib/backup.ts src/lib/backup.test.ts
@@ -970,19 +970,19 @@ git commit -m "feat: バックアップ ZIP の書き出し・読み込みを追
 
 ---
 
-### Task 5: 画像縮小と共有（`lib/image.ts`, `lib/share.ts`）
+### タスク 5: 画像縮小と共有（`lib/image.ts`, `lib/share.ts`）
 
-**Files:**
-- Create: `src/lib/image.ts`, `src/lib/share.ts`
-- Test: `src/lib/image.test.ts`
+**ファイル:**
+- 新規: `src/lib/image.ts`, `src/lib/share.ts`
+- テスト: `src/lib/image.test.ts`
 
-**Interfaces:**
-- Produces:
+**インターフェース:**
+- 提供:
   - `fitWithin(width: number, height: number, max: number): { width: number; height: number }`
   - `toResizedJpeg(file: Blob, max?: number, quality?: number): Promise<Blob>`（ブラウザ専用）
   - `shareOrDownload(blob: Blob, filename: string): Promise<void>`（共有シート → 不可ならダウンロード。ユーザー操作の直後に呼ぶこと）
 
-- [ ] **Step 1: 失敗するテストを書く** — `src/lib/image.test.ts`
+- [ ] **ステップ 1: 失敗するテストを書く** — `src/lib/image.test.ts`
 
 ```ts
 import { describe, expect, it } from 'vitest';
@@ -1001,12 +1001,12 @@ describe('fitWithin', () => {
 });
 ```
 
-- [ ] **Step 2: 失敗を確認**
+- [ ] **ステップ 2: 失敗を確認**
 
-Run: `npx vitest run src/lib/image.test.ts`
-Expected: FAIL
+実行: `npx vitest run src/lib/image.test.ts`
+期待結果: FAIL
 
-- [ ] **Step 3: 実装** — `src/lib/image.ts`
+- [ ] **ステップ 3: 実装** — `src/lib/image.ts`
 
 ```ts
 export function fitWithin(width: number, height: number, max: number): { width: number; height: number } {
@@ -1070,12 +1070,12 @@ export async function shareOrDownload(blob: Blob, filename: string): Promise<voi
 }
 ```
 
-- [ ] **Step 4: 通ることを確認**
+- [ ] **ステップ 4: 通ることを確認**
 
-Run: `npx vitest run src/lib/image.test.ts && npx tsc --noEmit`
-Expected: PASS、型エラーなし
+実行: `npx vitest run src/lib/image.test.ts && npx tsc --noEmit`
+期待結果: PASS、型エラーなし
 
-- [ ] **Step 5: Commit**
+- [ ] **ステップ 5: Commit**
 
 ```bash
 git add src/lib/image.ts src/lib/image.test.ts src/lib/share.ts
@@ -1084,16 +1084,16 @@ git commit -m "feat: 写真の縮小と共有シートでの保存を追加"
 
 ---
 
-### Task 6: アプリの骨組み（フック・共通部品・タブ・CSS）
+### タスク 6: アプリの骨組み（フック・共通部品・タブ・CSS）
 
-**Files:**
-- Create: `src/hooks/useGeolocation.ts`, `src/hooks/useCollection.ts`
-- Create: `src/components/TabBar.tsx`, `src/components/BlobImage.tsx`, `src/components/PhotoButton.tsx`, `src/components/Sheet.tsx`, `src/components/GeoBanner.tsx`
-- Modify: `src/App.tsx`（全体を置き換え）, `src/index.css`（全体を書く）
+**ファイル:**
+- 新規: `src/hooks/useGeolocation.ts`, `src/hooks/useCollection.ts`
+- 新規: `src/components/TabBar.tsx`, `src/components/BlobImage.tsx`, `src/components/PhotoButton.tsx`, `src/components/Sheet.tsx`, `src/components/GeoBanner.tsx`
+- 変更: `src/App.tsx`（全体を置き換え）, `src/index.css`（全体を書く）
 
-**Interfaces:**
-- Consumes: Task 3 の `getAll*`、Task 5 の `toResizedJpeg`
-- Produces:
+**インターフェース:**
+- 利用: タスク 3 の `getAll*`、タスク 5 の `toResizedJpeg`
+- 提供:
   - `type Position = { lat: number; lng: number; accuracy: number }`
   - `type GeoState = { status: 'unsupported' | 'locating' | 'ok' | 'denied' | 'error'; position: Position | null; message?: string }`
   - `useGeolocation(enabled: boolean): GeoState`、`getPositionOnce(timeoutMs?: number): Promise<Position | null>`
@@ -1103,7 +1103,7 @@ git commit -m "feat: 写真の縮小と共有シートでの保存を追加"
   - `<BlobImage blob alt className? onClick? />`、`<PhotoButton label onPhoto className? />`（onPhoto には縮小済み JPEG が渡る）
   - `<Sheet title onClose>{children}</Sheet>`、`<GeoBanner geo />`
 
-- [ ] **Step 1: フックを作成**
+- [ ] **ステップ 1: フックを作成**
 
 `src/hooks/useGeolocation.ts`:
 ```ts
@@ -1226,7 +1226,7 @@ export function useCollection(): Collection {
 }
 ```
 
-- [ ] **Step 2: 共通コンポーネントを作成**
+- [ ] **ステップ 2: 共通コンポーネントを作成**
 
 `src/components/TabBar.tsx`:
 ```tsx
@@ -1355,9 +1355,9 @@ export function GeoBanner({ geo }: { geo: GeoState }) {
 }
 ```
 
-- [ ] **Step 3: App と CSS**
+- [ ] **ステップ 3: App と CSS**
 
-`src/App.tsx`（Task 7〜9 のタブは仮表示にしておき、各タスクで差し替える）:
+`src/App.tsx`（タスク 7〜9 のタブは仮表示にしておき、各タスクで差し替える）:
 ```tsx
 import { useEffect, useState } from 'react';
 import { TabBar, type Tab } from './components/TabBar';
@@ -1480,15 +1480,15 @@ input[type='text'], textarea { font-size: 16px; padding: 10px; border: 1px solid
 textarea { min-height: 72px; resize: vertical; }
 ```
 
-- [ ] **Step 4: 型チェック・テスト・ブラウザ確認**
+- [ ] **ステップ 4: 型チェック・テスト・ブラウザ確認**
 
-Run: `npm test && npm run build`
-Expected: 全テスト PASS、ビルド成功
+実行: `npm test && npm run build`
+期待結果: 全テスト PASS、ビルド成功
 
 `npm run dev` を起動し、ブラウザで `http://localhost:5173/` を開く。
-Expected: 下部に「立像 / パネル / 設定」のタブ、立像タブに位置情報バナーが出る。タブを切り替えられる。
+期待結果: 下部に「立像 / パネル / 設定」のタブ、立像タブに位置情報バナーが出る。タブを切り替えられる。
 
-- [ ] **Step 5: Commit**
+- [ ] **ステップ 5: Commit**
 
 ```bash
 git add -A
@@ -1497,17 +1497,17 @@ git commit -m "feat: タブ・位置情報フック・共通コンポーネン�
 
 ---
 
-### Task 7: 立像タブ
+### タスク 7: 立像タブ
 
-**Files:**
-- Create: `src/components/StatueTab.tsx`, `src/components/SpotCard.tsx`
-- Modify: `src/App.tsx`（立像タブの仮表示を `<StatueTab />` に置き換え）
+**ファイル:**
+- 新規: `src/components/StatueTab.tsx`, `src/components/SpotCard.tsx`
+- 変更: `src/App.tsx`（立像タブの仮表示を `<StatueTab />` に置き換え）
 
-**Interfaces:**
-- Consumes: `SPOTS`, `ALL_STATUES`, `applyOverrides`, `Spot`（Task 1）/ `sortByDistance`, `formatDistance`, `directionsUrl`（Task 2）/ `putStatuePhoto`, `putStatueName`, `deleteStatueName`, `putSpotOverride`, `deleteSpotOverride`（Task 3）/ `shareOrDownload`（Task 5）/ `Collection`, `GeoState`, `Position`, `BlobImage`, `PhotoButton`, `GeoBanner`（Task 6）
-- Produces: `<StatueTab collection geo />`
+**インターフェース:**
+- 利用: `SPOTS`, `ALL_STATUES`, `applyOverrides`, `Spot`（タスク 1）/ `sortByDistance`, `formatDistance`, `directionsUrl`（タスク 2）/ `putStatuePhoto`, `putStatueName`, `deleteStatueName`, `putSpotOverride`, `deleteSpotOverride`（タスク 3）/ `shareOrDownload`（タスク 5）/ `Collection`, `GeoState`, `Position`, `BlobImage`, `PhotoButton`, `GeoBanner`（タスク 6）
+- 提供: `<StatueTab collection geo />`
 
-- [ ] **Step 1: SpotCard を作成** — `src/components/SpotCard.tsx`
+- [ ] **ステップ 1: SpotCard を作成** — `src/components/SpotCard.tsx`
 
 ```tsx
 import type { Spot } from '../data/spots';
@@ -1620,7 +1620,7 @@ export function SpotCard({ spot, distance, collection, here }: Props) {
 }
 ```
 
-- [ ] **Step 2: StatueTab を作成** — `src/components/StatueTab.tsx`
+- [ ] **ステップ 2: StatueTab を作成** — `src/components/StatueTab.tsx`
 
 ```tsx
 import { useMemo } from 'react';
@@ -1654,7 +1654,7 @@ export function StatueTab({ collection, geo }: { collection: Collection; geo: Ge
 }
 ```
 
-- [ ] **Step 3: App に組み込む** — `src/App.tsx` の立像タブ部分と import を置き換え
+- [ ] **ステップ 3: App に組み込む** — `src/App.tsx` の立像タブ部分と import を置き換え
 
 ```tsx
 // import に追加
@@ -1665,15 +1665,15 @@ import { StatueTab } from './components/StatueTab';
 {tab === 'statues' && <StatueTab collection={collection} geo={geo} />}
 ```
 
-- [ ] **Step 4: 確認**
+- [ ] **ステップ 4: 確認**
 
-Run: `npm test && npm run build`
-Expected: PASS・ビルド成功
+実行: `npm test && npm run build`
+期待結果: PASS・ビルド成功
 
 `npm run dev` → ブラウザの開発者ツールで位置情報を `35.6795, 139.7691`（ミッドタウン付近）に設定して再読み込み。
-Expected: ミッドタウン八重洲の 4 スポットが上に並び、距離が「すぐ近く」〜「約30m」、三井タワー付近は「約900m」前後。「撮影する」で画像を選ぶとサムネイルが出て「19体中 1体 撮影済み」になる。名前タップで変更すると「仮」が消える。「Googleマップで道順」で Google マップが新しいタブで開く。
+期待結果: ミッドタウン八重洲の 4 スポットが上に並び、距離が「すぐ近く」〜「約30m」、三井タワー付近は「約900m」前後。「撮影する」で画像を選ぶとサムネイルが出て「19体中 1体 撮影済み」になる。名前タップで変更すると「仮」が消える。「Googleマップで道順」で Google マップが新しいタブで開く。
 
-- [ ] **Step 5: Commit**
+- [ ] **ステップ 5: Commit**
 
 ```bash
 git add -A
@@ -1682,17 +1682,17 @@ git commit -m "feat: 立像タブ（距離順・道順・撮影・名前編集�
 
 ---
 
-### Task 8: パネルタブ
+### タスク 8: パネルタブ
 
-**Files:**
-- Create: `src/components/PanelTab.tsx`, `src/components/PanelForm.tsx`, `src/components/PanelDetail.tsx`
-- Modify: `src/App.tsx`（パネルタブの仮表示を `<PanelTab />` に置き換え）
+**ファイル:**
+- 新規: `src/components/PanelTab.tsx`, `src/components/PanelForm.tsx`, `src/components/PanelDetail.tsx`
+- 変更: `src/App.tsx`（パネルタブの仮表示を `<PanelTab />` に置き換え）
 
-**Interfaces:**
-- Consumes: `Panel`, `putPanel`, `deletePanel`（Task 3）/ `placeUrl`（Task 2）/ `shareOrDownload`（Task 5）/ `Collection`, `getPositionOnce`, `Position`, `BlobImage`, `PhotoButton`, `Sheet`（Task 6）
-- Produces: `<PanelTab collection />`
+**インターフェース:**
+- 利用: `Panel`, `putPanel`, `deletePanel`（タスク 3）/ `placeUrl`（タスク 2）/ `shareOrDownload`（タスク 5）/ `Collection`, `getPositionOnce`, `Position`, `BlobImage`, `PhotoButton`, `Sheet`（タスク 6）
+- 提供: `<PanelTab collection />`
 
-- [ ] **Step 1: PanelForm を作成** — `src/components/PanelForm.tsx`
+- [ ] **ステップ 1: PanelForm を作成** — `src/components/PanelForm.tsx`
 
 ```tsx
 import { useEffect, useState } from 'react';
@@ -1758,7 +1758,7 @@ export function PanelForm({ draft, onClose, onSaved }: Props) {
 }
 ```
 
-- [ ] **Step 2: PanelDetail を作成** — `src/components/PanelDetail.tsx`
+- [ ] **ステップ 2: PanelDetail を作成** — `src/components/PanelDetail.tsx`
 
 ```tsx
 import { useState } from 'react';
@@ -1826,7 +1826,7 @@ export function PanelDetail({ panel, onClose, onChanged }: Props) {
 }
 ```
 
-- [ ] **Step 3: PanelTab を作成** — `src/components/PanelTab.tsx`
+- [ ] **ステップ 3: PanelTab を作成** — `src/components/PanelTab.tsx`
 
 ```tsx
 import { useState } from 'react';
@@ -1892,7 +1892,7 @@ export function PanelTab({ collection }: { collection: Collection }) {
 }
 ```
 
-- [ ] **Step 4: App に組み込む** — `src/App.tsx`
+- [ ] **ステップ 4: App に組み込む** — `src/App.tsx`
 
 ```tsx
 // import に追加
@@ -1902,15 +1902,15 @@ import { PanelTab } from './components/PanelTab';
 {tab === 'panels' && <PanelTab collection={collection} />}
 ```
 
-- [ ] **Step 5: 確認**
+- [ ] **ステップ 5: 確認**
 
-Run: `npm test && npm run build`
-Expected: PASS・ビルド成功
+実行: `npm test && npm run build`
+期待結果: PASS・ビルド成功
 
 `npm run dev` → パネルタブで「＋ 見つけた！」→ 画像を選ぶ → 登録シートで名前を入れて保存。
-Expected: グリッドに追加され「1体 発見」。タップで詳細が開き、名前の変更・削除ができる。位置ありなら「地図で場所を見る」が出る。再読み込みしても残っている。
+期待結果: グリッドに追加され「1体 発見」。タップで詳細が開き、名前の変更・削除ができる。位置ありなら「地図で場所を見る」が出る。再読み込みしても残っている。
 
-- [ ] **Step 6: Commit**
+- [ ] **ステップ 6: Commit**
 
 ```bash
 git add -A
@@ -1919,17 +1919,17 @@ git commit -m "feat: パネルタブ（撮影・登録・一覧・詳細編集�
 
 ---
 
-### Task 9: 設定タブ（バックアップ・データ保護）
+### タスク 9: 設定タブ（バックアップ・データ保護）
 
-**Files:**
-- Create: `src/components/SettingsTab.tsx`
-- Modify: `src/App.tsx`（設定タブの仮表示を `<SettingsTab />` に置き換え）
+**ファイル:**
+- 新規: `src/components/SettingsTab.tsx`
+- 変更: `src/App.tsx`（設定タブの仮表示を `<SettingsTab />` に置き換え）
 
-**Interfaces:**
-- Consumes: `exportBackup`, `importBackup`, `backupFileName`（Task 4）/ `shareOrDownload`（Task 5）/ `Collection`（Task 6）
-- Produces: `<SettingsTab collection />`
+**インターフェース:**
+- 利用: `exportBackup`, `importBackup`, `backupFileName`（タスク 4）/ `shareOrDownload`（タスク 5）/ `Collection`（タスク 6）
+- 提供: `<SettingsTab collection />`
 
-- [ ] **Step 1: SettingsTab を作成** — `src/components/SettingsTab.tsx`
+- [ ] **ステップ 1: SettingsTab を作成** — `src/components/SettingsTab.tsx`
 
 書き出しは 2 段階（作成 → 保存ボタン）にする。iOS の共有シートはタップ直後でないと開けず、ZIP 作成を待つとタップ扱いが切れるため。
 
@@ -2042,7 +2042,7 @@ export function SettingsTab({ collection }: { collection: Collection }) {
 }
 ```
 
-- [ ] **Step 2: App に組み込む** — `src/App.tsx`
+- [ ] **ステップ 2: App に組み込む** — `src/App.tsx`
 
 ```tsx
 // import に追加
@@ -2052,15 +2052,15 @@ import { SettingsTab } from './components/SettingsTab';
 {tab === 'settings' && <SettingsTab collection={collection} />}
 ```
 
-- [ ] **Step 3: 確認**
+- [ ] **ステップ 3: 確認**
 
-Run: `npm test && npm run build`
-Expected: PASS・ビルド成功
+実行: `npm test && npm run build`
+期待結果: PASS・ビルド成功
 
 `npm run dev` → 設定タブで「バックアップを作成」→「backup-….zip を保存」でファイルがダウンロードされる。開発者ツールの Application → IndexedDB → `legend-research` を削除して再読み込み → 「バックアップを読み込む」でその ZIP を選ぶ。
-Expected: 「読み込みました（立像 N枚・パネル M枚）」と出て、写真が元に戻る。
+期待結果: 「読み込みました（立像 N枚・パネル M枚）」と出て、写真が元に戻る。
 
-- [ ] **Step 4: Commit**
+- [ ] **ステップ 4: Commit**
 
 ```bash
 git add -A
@@ -2069,18 +2069,18 @@ git commit -m "feat: 設定タブ（バックアップ・データ保護の案�
 
 ---
 
-### Task 10: PWA 化・アイコン・GitHub Pages デプロイ設定
+### タスク 10: PWA 化・アイコン・GitHub Pages デプロイ設定
 
-**Files:**
-- Create: `public/icon.svg`（+ `npm run icons` で生成される PNG / ico）
-- Create: `.github/workflows/deploy.yml`, `README.md`
-- Modify: `vite.config.ts`（VitePWA 追加）, `index.html`（アイコン・iOS 用 meta）
+**ファイル:**
+- 新規: `public/icon.svg`（+ `npm run icons` で生成される PNG / ico）
+- 新規: `.github/workflows/deploy.yml`, `README.md`
+- 変更: `vite.config.ts`（VitePWA 追加）, `index.html`（アイコン・iOS 用 meta）
 
-**Interfaces:**
-- Consumes: 既存のビルド設定
-- Produces: `dist/` に `manifest.webmanifest` と `sw.js`。`BASE_PATH` 指定時は全 URL がその配下になる。
+**インターフェース:**
+- 利用: 既存のビルド設定
+- 提供: `dist/` に `manifest.webmanifest` と `sw.js`。`BASE_PATH` 指定時は全 URL がその配下になる。
 
-- [ ] **Step 1: アイコン原画を作成** — `public/icon.svg`
+- [ ] **ステップ 1: アイコン原画を作成** — `public/icon.svg`
 
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
@@ -2091,10 +2091,10 @@ git commit -m "feat: 設定タブ（バックアップ・データ保護の案�
 </svg>
 ```
 
-Run: `npm run icons`
-Expected: `public/` に `favicon.ico`, `pwa-64x64.png`, `pwa-192x192.png`, `pwa-512x512.png`, `maskable-icon-512x512.png`, `apple-touch-icon-180x180.png` ができる。
+実行: `npm run icons`
+期待結果: `public/` に `favicon.ico`, `pwa-64x64.png`, `pwa-192x192.png`, `pwa-512x512.png`, `maskable-icon-512x512.png`, `apple-touch-icon-180x180.png` ができる。
 
-- [ ] **Step 2: VitePWA を設定** — `vite.config.ts` を置き換え
+- [ ] **ステップ 2: VitePWA を設定** — `vite.config.ts` を置き換え
 
 ```ts
 /// <reference types="vitest/config" />
@@ -2137,7 +2137,7 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 3: index.html にアイコンと iOS 用 meta を追加** — `<head>` 内、`<title>` の前に
+- [ ] **ステップ 3: index.html にアイコンと iOS 用 meta を追加** — `<head>` 内、`<title>` の前に
 
 ```html
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
@@ -2148,13 +2148,13 @@ export default defineConfig({
     <meta name="apple-mobile-web-app-title" content="レジェリサ" />
 ```
 
-- [ ] **Step 4: base 付きビルドを確認**
+- [ ] **ステップ 4: base 付きビルドを確認**
 
-Run: `BASE_PATH=/pokemon-researcher/ npm run build && grep -o 'href="[^"]*"' dist/index.html && ls dist`
-Expected: `href` がすべて `/pokemon-researcher/` で始まる（`manifest.webmanifest` を含む）。`dist/` に `sw.js`, `manifest.webmanifest`, アイコンがある。
+実行: `BASE_PATH=/pokemon-researcher/ npm run build && grep -o 'href="[^"]*"' dist/index.html && ls dist`
+期待結果: `href` がすべて `/pokemon-researcher/` で始まる（`manifest.webmanifest` を含む）。`dist/` に `sw.js`, `manifest.webmanifest`, アイコンがある。
 もしアイコンの `href` に base が付いていなければ、`index.html` の該当 `href` から先頭の `/` を外した相対パス（`favicon.ico` など）に直して再確認する。
 
-- [ ] **Step 5: GitHub Actions ワークフロー** — `.github/workflows/deploy.yml`
+- [ ] **ステップ 5: GitHub Actions ワークフロー** — `.github/workflows/deploy.yml`
 
 ```yaml
 name: Deploy to GitHub Pages
@@ -2203,7 +2203,7 @@ jobs:
         uses: actions/deploy-pages@v5
 ```
 
-- [ ] **Step 6: README** — `README.md`
+- [ ] **ステップ 6: README** — `README.md`
 
 ````markdown
 # レジェンドリサーチ・コレクター
@@ -2242,12 +2242,12 @@ npm run build
 - 出典: https://mitsui-shopping-park.com/urban/legend-research/
 ````
 
-- [ ] **Step 7: 最終確認**
+- [ ] **ステップ 7: 最終確認**
 
-Run: `npm test && npm run build && npm run preview`
-Expected: 全テスト PASS。`http://localhost:4173/` で開き、開発者ツールの Application → Manifest にアプリ名とアイコン、Service Workers に `sw.js` が登録されている。オフラインにして再読み込みしても画面が出る。
+実行: `npm test && npm run build && npm run preview`
+期待結果: 全テスト PASS。`http://localhost:4173/` で開き、開発者ツールの Application → Manifest にアプリ名とアイコン、Service Workers に `sw.js` が登録されている。オフラインにして再読み込みしても画面が出る。
 
-- [ ] **Step 8: Commit**
+- [ ] **ステップ 8: Commit**
 
 ```bash
 git add -A
