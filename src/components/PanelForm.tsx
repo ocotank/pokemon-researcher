@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Position } from '../hooks/useGeolocation';
 import { putPanel } from '../lib/db';
 import { errorText } from '../lib/errors';
@@ -14,6 +14,8 @@ export function PanelForm({ draft, onClose, onSaved }: Props) {
   const [memo, setMemo] = useState('');
   const [pos, setPos] = useState<Position | null | undefined>(undefined);
   const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
+  const [id] = useState(() => crypto.randomUUID());
 
   useEffect(() => {
     let alive = true;
@@ -24,6 +26,9 @@ export function PanelForm({ draft, onClose, onSaved }: Props) {
   }, [draft]);
 
   async function save() {
+    // 連打で二重保存しないため、再描画前の 2 回目のタップを止める。
+    if (savingRef.current) return;
+    savingRef.current = true;
     setSaving(true);
     let resolvedPosition = pos;
     if (resolvedPosition === undefined) {
@@ -32,7 +37,7 @@ export function PanelForm({ draft, onClose, onSaved }: Props) {
     }
     try {
       await putPanel({
-        id: crypto.randomUUID(),
+        id,
         blob: draft.blob,
         thumb: draft.thumb,
         name: name.trim(),
@@ -45,6 +50,7 @@ export function PanelForm({ draft, onClose, onSaved }: Props) {
     } catch (e) {
       alert(`保存できませんでした: ${errorText(e)}`);
       setSaving(false);
+      savingRef.current = false;
       return;
     }
     try {
@@ -52,6 +58,7 @@ export function PanelForm({ draft, onClose, onSaved }: Props) {
     } catch {
       alert('表示を更新できませんでした。アプリを開き直してください');
       setSaving(false);
+      savingRef.current = false;
     }
   }
 
